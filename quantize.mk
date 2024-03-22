@@ -33,6 +33,7 @@ quants:: $(QUANTS)
 	mv imatrix.dat $@
 
 .PRECIOUS:
+.DELETE_ON_ERROR:
 
 %.Q2_K.gguf: | %.F16.gguf
 	$(quantize) $| $@ Q2_K
