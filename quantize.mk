@@ -20,6 +20,7 @@ MODELS := $(notdir $(wildcard models/*))
 # quants = $(patsubst %,$1.%.gguf,$(QTYPES))
 
 f16:: $(foreach m,$(MODELS),$m.F16.gguf)
+q8:: $(foreach m,$(MODELS),$m.Q8_0.gguf)
 imat:: $(foreach m,$(MODELS),$m.imatrix)
 
 quants iquants:: f16 imat
