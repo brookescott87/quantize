@@ -1,4 +1,4 @@
-LLAMA_CPP_ROOT := C:/Apps/LlamaCPP
+LLAMA_CPP_ROOT := C:/Apps/Toaster
 LLAMA_CPP_BIN := $(LLAMA_CPP_ROOT)/bin
 LLAMA_CPP_DATA := $(LLAMA_CPP_ROOT)/data
 
