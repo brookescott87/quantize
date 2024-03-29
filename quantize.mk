@@ -19,11 +19,15 @@ MODELS := $(notdir $(wildcard models/*))
 # iquants = $(patsubst %,$1.%.gguf,$(IQTYPES))
 # quants = $(patsubst %,$1.%.gguf,$(QTYPES))
 
-KQUANTS := $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
-IQUANTS := $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
-QUANTS := $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(QTYPES)))
+f16:: $(foreach m,$(MODELS),$m.F16.gguf)
+imat:: $(foreach m,$(MODELS),$m.imatrix)
 
-quants:: $(QUANTS)
+quants iquants:: f16 imat
+quants:: kquants iquants
+kquants:: f16
+
+kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
+iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 
 %.F16.gguf: models/%
 	$(convert) $< --outtype f16 --outfile $@
