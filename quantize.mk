@@ -29,9 +29,8 @@ kquants:: f16
 kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 
-%.F16.gguf: models/%
-	$(convert) $< --outtype f16 --outfile $@
-	rm $<
+%.F16.gguf: | models/%
+	$(convert) $| --outtype f16 --outfile $@
 
 %.imatrix: | %.F16.gguf %.Q8_0.gguf
 	$(imatrix) -m $(shell $(imatrix_model) $|)
