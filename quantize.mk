@@ -6,7 +6,7 @@ KQTYPES := Q2_K Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K
 IQTYPES := IQ2_XXS IQ2_XS IQ3_XS IQ3_XXS IQ1_S IQ3_S IQ3_M IQ2_S IQ2_M IQ4_XS
 IQTYPES += Q2_K_S
 
-QTYPES := F16 Q8_0 $(KQTYPES) $(IQTYPES)
+QTYPES := Q8_0 $(KQTYPES) $(IQTYPES)
 
 quantize := $(LLAMA_CPP_BIN)/quantize.exe
 convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab
