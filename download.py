@@ -6,7 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(prog=os.getenv('PROGRAM'))
 parser.add_argument('repo_id', type=str,
                     help='Repo id of model to retrieve')
-parser.add_argument('destdir', type=Path,
+parser.add_argument('destdir', type=Path, default=Path('models'), nargs='?',
                     help='Directory into which a link to the model will be put')
 args = parser.parse_args()
 
