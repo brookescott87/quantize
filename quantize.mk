@@ -25,8 +25,9 @@ QUANTS := $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(QTYPES)))
 
 quants:: $(QUANTS)
 
-%.F16.gguf: | models/%
-	$(convert) $| --outtype f16 --outfile $@
+%.F16.gguf: models/%
+	$(convert) $< --outtype f16 --outfile $@
+	rm $<
 
 %.imatrix: | %.F16.gguf %.Q8_0.gguf
 	$(imatrix) -m $(shell $(imatrix_model) $|)
