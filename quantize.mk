@@ -15,10 +15,6 @@ imatrix_model := python imatrix_model.py
 
 MODELS := $(notdir $(wildcard models/*))
 
-# kquants = $(foreach m,%$(patsubst %,$1.%.gguf,$(KQTYPES))
-# iquants = $(patsubst %,$1.%.gguf,$(IQTYPES))
-# quants = $(patsubst %,$1.%.gguf,$(QTYPES))
-
 f16:: $(foreach m,$(MODELS),$m.F16.gguf)
 q8:: $(foreach m,$(MODELS),$m.Q8_0.gguf)
 imat:: $(foreach m,$(MODELS),$m.imatrix)
