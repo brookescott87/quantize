@@ -19,7 +19,7 @@ f16:: $(foreach m,$(MODELS),$m.F16.gguf)
 q8:: $(foreach m,$(MODELS),$m.Q8_0.gguf)
 imat:: $(foreach m,$(MODELS),$m.imatrix)
 
-quants iquants:: f16 imat
+quants iquants:: f16 q8 imat
 quants:: kquants iquants
 kquants:: f16
 
