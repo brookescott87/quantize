@@ -30,8 +30,7 @@ iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 	$(convert) $| --outtype f16 --outfile $@
 
 %.imatrix: | %.F16.gguf %.Q8_0.gguf
-	$(imatrix) -m $(shell $(imatrix_model) $|)
-	mv imatrix.dat $@
+	$(imatrix) -o $@ -m $(shell $(imatrix_model) $|)
 
 .PRECIOUS:
 .DELETE_ON_ERROR:
