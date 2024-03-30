@@ -10,7 +10,7 @@ QTYPES := Q8_0 $(KQTYPES) $(IQTYPES)
 
 quantize := $(LLAMA_CPP_BIN)/quantize.exe
 convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab
-imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt
+imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python imatrix_model.py
 
 MODELS := $(notdir $(wildcard models/*))
