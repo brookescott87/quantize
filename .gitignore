@@ -1,3 +1,5 @@
 /models/
 *.gguf
 *.gguf.split-*
+*.imatrix
+imatrix.dat
