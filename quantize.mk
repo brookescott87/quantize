@@ -12,7 +12,7 @@ qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
 
 # xquantize(out, type, in[, imat])
 xquantize = \
-	$(LLAMA_CPP_BIN)/quantize.exe $(if $4,--imatrix $4) $3 $1 $2
+	$(LLAMA_CPP_BIN)/quantize.exe --background $(if $4,--imatrix $4) $3 $1 $2
 
 # quantize(ins, out)
 quantize = $(call xquantize,$2,$(call qtype,$2),$(filter %.gguf,$1),$(filter %.imatrix,$1))
