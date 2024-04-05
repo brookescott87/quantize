@@ -8,7 +8,7 @@ goto proceed
 :confirm
 echo To be deleted:
 for %%f in (%*) do (
-    echo.    %%~f
+    if exist "%%~f" echo.    %%~f
 )
 choice /c YN /m "Proceed"
 if errorlevel 2 goto :abort
