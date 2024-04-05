@@ -21,6 +21,8 @@ goto :eof
 
 :proceed
 for %%f in (%*) do (
-    if exist "%%~f" del /f "%%~f"
-    mklink "%%~f" nul
+    if exist "%%~f" (
+        del /f "%%~f"
+        mklink "%%~f" nul
+    )
 )
