@@ -16,9 +16,9 @@ endif
 
 ifdef INSTALL_DIR
 VPATH := $(patsubst %,$(INSTALL_DIR)/%-GGUF,$(MODELS))
-mvinst = mkdir -p $(INSTALL_DIR)/$2 && mv $1 $(INSTALL_DIR)/$2
+install = mkdir -p $(INSTALL_DIR)/$2 && mv $1 $(INSTALL_DIR)/$2
 else
-mvinst = true
+install = true
 endif
 
 # xquantize(out, type, in[, imat])
@@ -27,7 +27,7 @@ xquantize = \
 
 # quantize(base, ins, out)
 quantize = \
-	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call mvinst,$3,$1-GGUF)
+	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF)
 
 convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab
 imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
