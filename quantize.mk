@@ -16,7 +16,7 @@ endif
 
 ifdef INSTALL_DIR
 VPATH := $(patsubst %,$(INSTALL_DIR)/%-GGUF,$(MODELS))
-install = mkdir -p $(INSTALL_DIR)/$2 && mv $1 $(INSTALL_DIR)/$2
+install = mkdir -p $(INSTALL_DIR)/$2 && $(if $(filter %.F16.gguf %.Q8_0.gguf %.imatrix, $1),cp,mv) $1 $(INSTALL_DIR)/$2
 else
 install = true
 endif
