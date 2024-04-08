@@ -45,10 +45,10 @@ kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 
 %.F16.gguf: | models/%
-	$(convert) $| --outtype f16 --outfile $@
+	$(convert) $| --outtype f16 --outfile $@ && $(call install,$@,$*-GGUF)
 
 %.imatrix: | %.F16.gguf %.Q8_0.gguf
-	$(imatrix) -o $@ -m $(shell $(imatrix_model) $|)
+	$(imatrix) -o $@ -m $(shell $(imatrix_model) $|) && $(call install,$@,$*-GGUF)
 
 .PRECIOUS:
 .DELETE_ON_ERROR:
