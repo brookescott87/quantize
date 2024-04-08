@@ -14,20 +14,22 @@ ifndef MODELS
 MODELS := $(notdir $(wildcard models/*))
 endif
 
+xinstall = mkdir -p $3 && $1 $2 $3
+
 ifdef INSTALL_DIR
 VPATH := $(patsubst %,$(INSTALL_DIR)/%-GGUF,$(MODELS))
-install = mkdir -p $(INSTALL_DIR)/$2 && $(if $(filter %.F16.gguf %.Q8_0.gguf %.imatrix, $1),cp,mv) $1 $(INSTALL_DIR)/$2
+install = $(call xinstall,$(if $(filter %.F16.gguf %.Q8_0.gguf %.imatrix,$1),cp,mv),$1,$(INSTALL_DIR)/$2)
 else
 install = true
 endif
 
-# xquantize(out, type, in[, imat])
+# xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
 	$(LLAMA_CPP_BIN)/quantize.exe --background $(if $4,--imatrix $4) $3 $1 $2
 
-# quantize(base, ins, out)
+# quantize($1=base, $2=ins, $3=out)
 quantize = \
-	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF)
+	$(call xquantize,$3.tmp,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && mv $3.tmp $3 && $(call install,$3,$1-GGUF)
 
 convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab
 imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
@@ -45,10 +47,10 @@ kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 
 %.F16.gguf: | models/%
-	$(convert) $| --outtype f16 --outfile $@ && $(call install,$@,$*-GGUF)
+	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF)
 
 %.imatrix: | %.F16.gguf %.Q8_0.gguf
-	$(imatrix) -o $@ -m $(shell $(imatrix_model) $|) && $(call install,$@,$*-GGUF)
+	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF)
 
 .PRECIOUS:
 .DELETE_ON_ERROR:
