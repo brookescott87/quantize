@@ -44,7 +44,10 @@ while True:
             if args.all or not split_rx.match(f.name):
                 if f.stat().st_size <= MAX_UPLOAD_SIZE:
                     try:
-                        if not hfapi.file_exists(repo_id, f.name):
+                        if hfapi.file_exists(repo_id, f.name):
+                            print(f'Removing {f.name}')
+                            f.unlink()
+                        else:
                             active = True
                             print(f'Uploading {f.name} to {repo_id}/{f.name}')
                             v = hfapi.upload_file(path_or_fileobj=f, repo_id=repo_id, path_in_repo=f.name,
