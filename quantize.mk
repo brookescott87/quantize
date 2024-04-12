@@ -18,10 +18,11 @@ xinstall = mkdir -p $3 && $1 $2 $3
 
 ifdef INSTALL_DIR
 VPATH := $(patsubst %,$(INSTALL_DIR)/%-GGUF,$(MODELS))
-install = $(call xinstall,$(if $(filter %.F16.gguf %.Q8_0.gguf %.imatrix,$1),cp,mv),$1,$(INSTALL_DIR)/$2)
+install = python install.py $(install_opts) $1 $(INSTALL_DIR)/$2
 else
 install = true
 endif
+install_opts :=
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
@@ -45,6 +46,8 @@ kquants:: f16
 
 kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
+
+%.F16.gguf %.Q8_0.gguf %.imatrix: install_opts := -k
 
 %.F16.gguf: | models/%
 	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF)
