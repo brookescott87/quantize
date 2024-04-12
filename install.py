@@ -61,6 +61,8 @@ parser.add_argument('--keep', '-k', action='store_true',
 parser.add_argument('--mode', '-m', type=lambda m: int(m, 8),
                     help='Installed file mode in octal')
 args = parser.parse_args()
+if not args.file.exists():
+    raise ValueError(f'{args.file} does not exist')
 if not args.file.is_file() or args.file.is_symlink():
     raise ValueError(f'{args.file} is not a regular file')
 if not args.destdir.is_dir():
