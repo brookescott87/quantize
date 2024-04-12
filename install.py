@@ -33,6 +33,22 @@ def format_timedelta(delta: datetime.timedelta) -> str:
 
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
+def copy_file(srcpath: Path, destpath: Path):
+    filesize = srcpath.stat().st_size
+
+    with open(destpath, 'wb', buffering=0) as destfile:
+        with open(srcpath, 'rb', buffering=0) as srcfile:
+            buffer = iobuffer(1024*1024)
+            copied = 0
+            start_time = datetime.datetime.now()
+            while buffer.readfrom(srcfile):
+                copied += buffer.writeto(destfile)
+                sys.stdout.write(f"\rWrote {copied} of {filesize}")
+                sys.stdout.flush()
+            sys.stdout.write('\n')
+            stop_time = datetime.datetime.now()
+            sys.stdout.write(f'Copied {copied} bytes in {format_timedelta(stop_time - start_time)}')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('file', type=Path,
                     help='File to install')
@@ -55,21 +71,10 @@ if dest.exists():
         dest.unlink()
     else:
         raise ValueError(f'{dest} already exists and --force not given')
-filesize = args.file.stat().st_size
+    
 tmp = dest.with_suffix(args.file.suffix + '.tmp')
+copy_file(args.file, tmp)
 
-with open(tmp, 'wb', buffering=0) as destfile:
-    with open(args.file, 'rb', buffering=0) as srcfile:
-        buffer = iobuffer(1024*1024)
-        copied = 0
-        start_time = datetime.datetime.now()
-        while buffer.readfrom(srcfile):
-            copied += buffer.writeto(destfile)
-            sys.stdout.write(f"\rWrote {copied} of {filesize}")
-            sys.stdout.flush()
-        sys.stdout.write('\n')
-        stop_time = datetime.datetime.now()
-        sys.stdout.write(f'Copied {copied} bytes in {format_timedelta(stop_time - start_time)}')
 if args.mode:
     tmp.chmod(args.mode)
 tmp.rename(dest)
