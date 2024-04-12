@@ -65,8 +65,11 @@ if not args.file.exists():
     raise ValueError(f'{args.file} does not exist')
 if not args.file.is_file() or args.file.is_symlink():
     raise ValueError(f'{args.file} is not a regular file')
-if not args.destdir.is_dir():
-    raise ValueError(f'{args.destdir} is not a directory')
+if args.destdir.exists():
+    if not args.destdir.is_dir():
+        raise ValueError(f'{args.destdir} is not a directory')
+else:
+    args.destdir.mkdir(parents=True)
 dest = args.destdir / args.file.name
 if dest.exists():
     if args.force:
