@@ -49,6 +49,11 @@ def copy_file(srcpath: Path, destpath: Path):
             stop_time = datetime.datetime.now()
             sys.stdout.write(f'Copied {copied} bytes in {format_timedelta(stop_time - start_time)}')
 
+if sys.platform == 'win32':
+    nulldev = Path('nul')
+else:
+    nulldev = Path('/dev/null')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('file', type=Path,
                     help='File to install')
@@ -85,4 +90,5 @@ if args.mode:
 tmp.rename(dest)
 if not args.keep:
     args.file.unlink(missing_ok=True)
-    args.file.symlink_to(dest)
+    args.file.symlink_to(nulldev)
+
