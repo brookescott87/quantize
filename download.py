@@ -23,4 +23,4 @@ model_path = args.destdir / model
 hfapi = huggingface_hub.HfApi()
 
 cache_path = Path(hfapi.snapshot_download(repo_id=args.repo_id))
-os.symlink(str(cache_path), str(model_path))
+model_path.symlink_to(cache_path, True)
