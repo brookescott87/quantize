@@ -1,13 +1,5 @@
 ---
-base_model: ${model_id}
-license: other
-language:
-- en
-library_name: transformers
-pipeline_tag: text-generation
-quantized_by: brooketh
-tags:
-{tags}
+${metadata}
 ---
 <img src="Faraday Model Repository Banner.png" alt="Faraday.dev" style="height: 90px; min-width: 32px; display: block; margin: auto;">
 
@@ -18,9 +10,9 @@ tags:
 <p style="text-align: center;"><a href="https://www.reddit.com/r/LLM_Quants/">Request Additional models at r/LLM_Quants.</a></p>
 
 ***
-# ${name}
+# ${title}
 - **Creator:** [${author}](https://huggingface.co/${author}/)
-- **Original:** [${name}](https://huggingface.co/${model_id})
+- **Original:** [${title}](https://huggingface.co/${model_id})
 - **Date Created:** ${date}
 - **Trained Context:** ${context} tokens
 - **Description:** ${description}
