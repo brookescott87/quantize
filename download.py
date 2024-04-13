@@ -24,3 +24,4 @@ hfapi = huggingface_hub.HfApi()
 
 cache_path = Path(hfapi.snapshot_download(repo_id=args.repo_id))
 model_path.symlink_to(cache_path, True)
+print(f'\n\nModel downloaded to: {model_path.absolute()}')
