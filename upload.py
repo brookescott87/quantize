@@ -3,11 +3,15 @@ import re
 from datetime import datetime as dt
 from tzlocal import get_localzone
 from pathlib import Path
+import subprocess
 import huggingface_hub
 import argparse
 
 MAX_UPLOAD_SIZE = 50_000_000_000
 split_rx = re.compile('.*-split-\d{5}-of-\d{5}\.gguf$')
+
+TOASTER = Path(os.environ['TOASTER'])
+gguf_split_exe = TOASTER/'bin'/'gguf-split'
 
 def timestamp():
     return dt.strftime(dt.now(get_localzone()), '%Y/%m/%d-%H:%M:%S(%Z)')
@@ -20,6 +24,12 @@ def print_object(p, obj):
         print(f'Failed to write {type(obj).__name__} to {p}')
     else:
         print(f'Wrote {type(obj).__name__} to {p}')
+
+def gguf_split(p: Path):
+    result = subprocess.run([gguf_split_exe, '--split-max-size', str(MAX_UPLOAD_SIZE), p])
+    if result.returncode:
+        raise RuntimeError(f'gguf-split returned {result.returncode}')
+    p.rename(p.with_suffix('.dead'))
 
 if (hf_key := 'HF_HUB_ENABLE_HF_TRANSFER') in os.environ:
     del os.environ[hf_key]
