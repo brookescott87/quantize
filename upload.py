@@ -28,7 +28,7 @@ def print_object(p, obj):
         print(f'Wrote {type(obj).__name__} to {p}')
 
 def next_file(dirp):
-    for g in ('*.imatrix','*.gguf'):
+    for g in ('README.md','*.png','*.imatrix','*.gguf'):
         for f in dirp.glob(g):
             if f not in removed:
                 if f.is_file() and not f.is_symlink():
