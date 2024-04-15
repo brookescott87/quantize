@@ -4,6 +4,7 @@ from datetime import datetime as dt
 from tzlocal import get_localzone
 from pathlib import Path
 import subprocess
+import clear_screen
 import huggingface_hub
 import argparse
 
@@ -58,6 +59,7 @@ repo = acwd.name
 owner = acwd.parent.name
 repo_id = f'{owner}/{repo}'
 
+clear_screen.clear()
 while f := next_file(cwd):
     if f.stat().st_size > MAX_UPLOAD_SIZE:
         gguf_split(f)
