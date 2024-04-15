@@ -24,6 +24,27 @@ class iobuffer(object):
     def writeto(self, f):
         return f.write(self.bytes) if self.length else 0
 
+class statusline(object):
+    def __init__(self, stream=sys.stdout):
+        self.out = stream
+        self.pos = 0
+        self.line = 0
+
+    def retn(self, linefeed = False):
+        if (pad := self.line - self.pos) > 0:
+            self.out.write(' '*pad)
+        if linefeed:
+            self.out.write('\n')
+            self.line = 0
+        else:
+            self.out.write('\r')
+            self.out.flush()
+            self.line = self.pos
+        self.pos = 0
+
+    def print(self, text):
+        self.pos += self.out.write(text)
+
 def format_timedelta(delta: datetime.timedelta) -> str:
     """Formats a timedelta duration to %H:%M:%S format"""
     seconds = int(delta.total_seconds())
@@ -39,15 +60,21 @@ def copy_file(srcpath: Path, destpath: Path):
     with open(destpath, 'wb', buffering=0) as destfile:
         with open(srcpath, 'rb', buffering=0) as srcfile:
             buffer = iobuffer(1024*1024)
+            statln = statusline()
             copied = 0
             start_time = datetime.datetime.now()
             while buffer.readfrom(srcfile):
                 copied += buffer.writeto(destfile)
-                sys.stdout.write(f"\rWrote {copied} of {filesize}")
-                sys.stdout.flush()
-            sys.stdout.write('\n')
+                progress = copied/filesize
+                elapsed = datetime.datetime.now() - start_time
+                estr = format_timedelta(elapsed)
+                remaining = elapsed/progress
+                rstr = format_timedelta(remaining)
+                statln.print(f'Wrote {copied:15,} of {filesize:15,} ({progress*100:.1f}%) [{estr}<{rstr}]')
+                statln.retn()
+            statln.retn(True)
             stop_time = datetime.datetime.now()
-            sys.stdout.write(f'Copied {copied} bytes in {format_timedelta(stop_time - start_time)}')
+            sys.stdout.write(f'Copied {copied:,} bytes in {format_timedelta(stop_time - start_time)}\n')
 
 if sys.platform == 'win32':
     nulldev = Path('nul')
