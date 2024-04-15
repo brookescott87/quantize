@@ -2,5 +2,6 @@
 *.gguf
 *.gguf.split-*
 *.imatrix
+*.log
 imatrix.dat
 README.md
