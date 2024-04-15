@@ -3,3 +3,4 @@
 *.gguf.split-*
 *.imatrix
 imatrix.dat
+README.md
