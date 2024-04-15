@@ -13,8 +13,6 @@ split_rx = re.compile('.*-split-\d{5}-of-\d{5}\.gguf$')
 TOASTER = Path(os.environ['TOASTER'])
 gguf_split_exe = TOASTER/'bin'/'gguf-split'
 
-removed = set()
-
 def timestamp():
     return dt.strftime(dt.now(get_localzone()), '%Y/%m/%d-%H:%M:%S(%Z)')
 
@@ -30,9 +28,8 @@ def print_object(p, obj):
 def next_file(dirp):
     for g in ('README.md','*.png','*.imatrix','*.gguf'):
         for f in dirp.glob(g):
-            if f not in removed:
-                if f.is_file() and not f.is_symlink():
-                    return f
+            if f.is_file() and not f.is_symlink():
+                return f
     return None
 
 def gguf_split(p: Path):
@@ -68,7 +65,6 @@ while f := next_file(cwd):
         try:
             if hfapi.file_exists(repo_id, f.name):
                 print(f'Removing {f.name}')
-                removed.add(f)
                 f.unlink()
             else:
                 print(f'Uploading {f.name} to {repo_id}/{f.name}')
