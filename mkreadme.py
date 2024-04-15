@@ -64,6 +64,7 @@ card_data.base_model = args.model_id
 card_data.model_name = args.name
 card_data.quantized_by = 'brooketh'
 card_data.widget = None
+card_data.eval_results = None
 
 args.metadata = card_data.to_yaml()
 
