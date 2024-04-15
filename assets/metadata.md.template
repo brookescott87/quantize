@@ -1,0 +1,11 @@
+---
+base_model: ${model_id}
+license: other
+language:
+- en
+library_name: transformers
+pipeline_tag: text-generation
+quantized_by: brooketh
+tags:
+{tags}
+---
