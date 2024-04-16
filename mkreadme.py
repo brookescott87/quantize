@@ -35,9 +35,12 @@ repo = RepoPath(args.model_id)
 config = json.loads(hfs.cat_file(repo / 'config.json'))
 
 if not card_data.model_name == repo.name:
-    sys.stderr.write(f'card_data says model name is {card_data.model_name}\n')
-    sys.stderr.write(f'but model_id is {args.model_id}\n')
-    raise ValueError('Model name mismatch')
+    if card_data.model_name:
+        sys.stderr.write(f'Warning: card_data says model name is {card_data.model_name}\n')
+        sys.stderr.write(f'but model_id is {args.model_id}\n')
+        raise ValueError('Model name mismatch')
+    else:
+        sys.stderr.write("Warning: model name not set in base model's metadata\n")
 
 if not args.author:
     args.author = model_info.author
