@@ -86,6 +86,8 @@ parser.add_argument('file', type=Path,
                     help='File to install')
 parser.add_argument('destdir', type=Path,
                     help='directory to install to')
+parser.add_argument('--name', '-n', type=str,
+                    help='Different name to give file at destination')
 parser.add_argument('--force', '-f', action='store_true',
                     help='Overwrite existing file')
 parser.add_argument('--keep', '-k', action='store_true',
@@ -102,14 +104,18 @@ if args.destdir.exists():
         raise ValueError(f'{args.destdir} is not a directory')
 else:
     args.destdir.mkdir(parents=True)
-dest = args.destdir / args.file.name
+dest = args.destdir / (args.name or args.file.name)
+if not dest.parent == args.destdir:
+    raise ValueError(f'Invalid destination name: {args.name}')
 if dest.exists():
+    if not dest.is_file() or dest.is_symlink():
+        raise ValueError(f'{dest} is not a regular file')
     if args.force:
         dest.unlink()
     else:
         raise ValueError(f'{dest} already exists and --force not given')
     
-tmp = dest.with_suffix(args.file.suffix + '.tmp')
+tmp = dest.with_suffix(dest.suffix + '.tmp')
 copy_file(args.file, tmp)
 
 if args.mode:
