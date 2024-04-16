@@ -74,6 +74,9 @@ while f := next_file(cwd):
                                     commit_message=f'Upload {f.name}')
                 print(f'{f.name} succeeded')
                 print_object(f.with_suffix('.log'), v)
+        except KeyboardInterrupt:
+            print('\nKeyboard interrupt')
+            break
         except Exception as ex:
             print(f'\n{f.name} failed due to {type(ex).__name__}')
             print_object(f.with_suffix('.err'), ex)
