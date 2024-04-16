@@ -10,6 +10,8 @@ hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--output', '-o', type=Path, default=Path('README.md'),
+                    help='Output file')
 parser.add_argument('model_id', type=str,
                     help='HuggingFace Model ID')
 parser.add_argument('--author', '-a', type=str,
@@ -25,8 +27,6 @@ parser.add_argument('--date', '-d',
                     help='Model creation date')
 parser.add_argument('--description', '--desc', '-s', type=str, default='(Add description here)',
                     help='Model description')
-parser.add_argument('--print', '-p', action='store_true',
-                    help='Print result to standard output')
 args = parser.parse_args()
 
 model_info = hfapi.model_info(args.model_id)
@@ -77,8 +77,8 @@ with open(assets_dir/'README.md.template','rt',encoding='utf-8') as f:
     template = Template(f.read())
 
 readme = template.substitute(vars(args))
-if args.print:
+if args.output.name == '-':
     print(readme)
 else:
-    with open('README.md', 'wt', encoding='utf-8') as f:
+    with args.output.open('wt', encoding='utf-8') as f:
         f.write(readme)
