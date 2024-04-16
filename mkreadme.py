@@ -9,7 +9,19 @@ import argparse
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
 
+def get_model_id(p: Path) -> str:
+    if not p.exists():
+        raise ValueError(f'{p} does not exist')
+    if p.is_symlink():
+        return get_model_id(p.readlink())
+    for s in p.parts:
+        if s.startswith('models--'):
+            return s[8:].replace('--', '/')
+    return None
+
 parser = argparse.ArgumentParser()
+parser.add_argument('--file', '-f', action='store_true',
+                    help='Model ID is actually a file')
 parser.add_argument('--output', '-o', type=Path, default=Path('README.md'),
                     help='Output file')
 parser.add_argument('model_id', type=str,
@@ -28,6 +40,12 @@ parser.add_argument('--date', '-d',
 parser.add_argument('--description', '--desc', '-s', type=str, default='(Add description here)',
                     help='Model description')
 args = parser.parse_args()
+
+if args.file:
+    if model_id := get_model_id(Path(args.model_id)):
+        args.model_id = model_id
+    else:
+        raise ValueError(f"Couldn't determine model_id from {args.model_id}")
 
 model_info = hfapi.model_info(args.model_id)
 card_data = model_info.card_data
