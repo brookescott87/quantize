@@ -75,7 +75,7 @@ while f := next_file(cwd):
                 print(f'{f.name} succeeded')
                 print_object(f.with_suffix('.log'), v)
         except KeyboardInterrupt:
-            print('\nKeyboard interrupt')
+            print('\n*** Keyboard interrupt ***')
             break
         except Exception as ex:
             print(f'\n{f.name} failed due to {type(ex).__name__}')
