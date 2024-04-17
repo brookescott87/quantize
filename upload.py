@@ -28,7 +28,7 @@ def print_object(p, obj):
 
 def next_file(dirp):
     for g in ('README.md','*.png','*.imatrix','*.gguf'):
-        for f in dirp.glob(g):
+        for f in sorted(dirp.glob(g),key=lambda p: p.stat().st_size):
             if f.is_file() and not f.is_symlink():
                 return f
     return None
