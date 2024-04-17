@@ -18,19 +18,18 @@ xinstall = mkdir -p $3 && $1 $2 $3
 
 ifdef INSTALL_DIR
 VPATH := $(patsubst %,$(INSTALL_DIR)/%-GGUF,$(MODELS))
-install = python install.py $(install_opts) $1 $(INSTALL_DIR)/$2
+install = python install.py $3 $1 $(INSTALL_DIR)/$2
 else
 install = true
 endif
-install_opts :=
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
 	$(LLAMA_CPP_BIN)/quantize.exe --background $(if $4,--imatrix $4) $3 $1 $2
 
-# quantize($1=base, $2=ins, $3=out)
+# quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
-	$(call xquantize,$3.tmp,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && mv $3.tmp $3 && $(call install,$3,$1-GGUF)
+	$(call xquantize,$3.tmp,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && mv $3.tmp $3 && $(call install,$3,$1-GGUF,$4)
 
 convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab
 imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
@@ -47,13 +46,11 @@ kquants:: f16
 kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 
-%.F16.gguf %.Q8_0.gguf %.imatrix: install_opts := -k
-
 %.F16.gguf: | models/%
-	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF)
+	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
 %.imatrix: %.F16.gguf %.Q8_0.gguf
-	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $^) && mv $@.tmp $@ && $(call install,$@,$*-GGUF)
+	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $^) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
 .DELETE_ON_ERROR:
 
@@ -76,7 +73,7 @@ iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 %.Q6_K.gguf: %.F16.gguf
 	$(call quantize,$*,$^,$@)
 %.Q8_0.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
+	$(call quantize,$*,$^,$@,-k)
 %.Q2_K_S.gguf: %.F16.gguf %.imatrix
 	$(call quantize,$*,$^,$@)
 %.IQ2_XXS.gguf: %.F16.gguf %.imatrix
