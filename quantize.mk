@@ -29,7 +29,7 @@ xquantize = \
 
 # quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
-	$(call xquantize,$3.tmp,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && mv $3.tmp $3 && $(call install,$3,$1-GGUF,$4)
+	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
 
 convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab
 imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
