@@ -69,10 +69,10 @@ while f := next_file(cwd):
                 print(f'Removing {f.name}')
                 f.unlink()
             else:
-                print(f'Uploading {f.name} to {repo_id}/{f.name}')
+                print(f'\n{timestamp()} ### Uploading {f.name} to {repo_id}/{f.name}')
                 v = hfapi.upload_file(path_or_fileobj=f, repo_id=repo_id, path_in_repo=f.name,
                                     commit_message=f'Upload {f.name}')
-                print(f'{f.name} succeeded')
+                print(f'{timestamp()} {f.name} succeeded')
                 print_object(f.with_suffix('.log'), v)
         except KeyboardInterrupt:
             print('\n*** Keyboard interrupt ***')
