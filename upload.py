@@ -39,6 +39,23 @@ def gguf_split(p: Path):
         raise RuntimeError(f'gguf-split returned {result.returncode}')
     p.rename(p.with_suffix('.dead'))
 
+def upload_file(p: Path, repo_id: str, new_name:str = None) -> bool:
+    name = new_name or p.name
+    print(f'{timestamp()} ### Uploading {p.name} to {repo_id}/{name}')
+    try:
+        v = hfapi.upload_file(path_or_fileobj=p, repo_id=repo_id, path_in_repo=name,
+                              commit_message=f'Upload {name}')
+        print_object(f.with_suffix('.log'), v)
+    except KeyboardInterrupt as k:
+        raise(k)
+    except Exception as e:
+        print_object(f.with_suffix('.err'), e)
+        print(f'\n{f.name} failed due to {type(e).__name__}')
+    else:
+        print(f'{timestamp()} {p.name} succeeded')
+        return True
+    return False
+
 if (hf_key := 'HF_HUB_ENABLE_HF_TRANSFER') in os.environ:
     del os.environ[hf_key]
 
@@ -69,15 +86,8 @@ while f := next_file(cwd):
                 print(f'Removing {f.name}')
                 f.unlink()
             else:
-                print(f'{timestamp()} ### Uploading {f.name} to {repo_id}/{f.name}')
-                v = hfapi.upload_file(path_or_fileobj=f, repo_id=repo_id, path_in_repo=f.name,
-                                    commit_message=f'Upload {f.name}')
-                print(f'{timestamp()} {f.name} succeeded')
-                print_object(f.with_suffix('.log'), v)
+                upload_file(f, repo_id)
         except KeyboardInterrupt:
             print('\n*** Keyboard interrupt ***')
             break
-        except Exception as ex:
-            print(f'\n{f.name} failed due to {type(ex).__name__}')
-            print_object(f.with_suffix('.err'), ex)
     print()
