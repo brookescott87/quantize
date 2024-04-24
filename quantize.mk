@@ -39,9 +39,9 @@ f16:: $(foreach m,$(MODELS),$m.F16.gguf)
 q8:: $(foreach m,$(MODELS),$m.Q8_0.gguf)
 imat:: $(foreach m,$(MODELS),$m.imatrix)
 
-quants iquants:: f16 q8 imat
+kquants iquants:: f16 q8
+iquants:: imat
 quants:: kquants iquants
-kquants:: f16
 
 kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
