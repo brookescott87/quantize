@@ -34,6 +34,8 @@ parser.add_argument('--name', '-n', type=str,
                     help='Model name')
 parser.add_argument('--context', '-c', type=int,
                     help='Model context size')
+parser.add_argument('--mistral', '-M', action='store_true',
+                    help='Mistral compatibility switch')
 parser.add_argument('--date', '-d',
                     type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d').date(),
                     help='Model creation date')
@@ -70,7 +72,7 @@ if not args.date:
     args.date = model_info.created_at.date()
 if not args.context:
     if context := config.get('max_sequence_length') or config.get('max_position_embeddings'):
-        if context > 8192:
+        if args.mistral and context > 8192:
             sys.stderr.write(f'Reducing max context from {context} to 8192\n')
             context = 8192
     else:
