@@ -49,52 +49,52 @@ iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 %.F16.gguf: | models/%
 	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
-%.imatrix: %.F16.gguf %.Q8_0.gguf
-	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $^) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.imatrix:| %.F16.gguf %.Q8_0.gguf
+	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
 .DELETE_ON_ERROR:
 
-%.Q2_K.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q3_K_S.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q3_K_M.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q3_K_L.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q4_K_S.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q4_K_M.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q5_K_S.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q5_K_M.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q6_K.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@)
-%.Q8_0.gguf: %.F16.gguf
-	$(call quantize,$*,$^,$@,-k)
-%.Q2_K_S.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ2_XXS.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ2_XS.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ3_XS.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ3_XXS.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ1_S.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-# %.IQ4_NL.gguf: %.F16.gguf %.imatrix
-# 	$(call quantize,$*,$^,$@)
-%.IQ3_S.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ3_M.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ2_S.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ2_M.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
-%.IQ4_XS.gguf: %.F16.gguf %.imatrix
-	$(call quantize,$*,$^,$@)
+%.Q2_K.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q3_K_S.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q3_K_M.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q3_K_L.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q4_K_S.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q4_K_M.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q5_K_S.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q5_K_M.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q6_K.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@)
+%.Q8_0.gguf:| %.F16.gguf
+	$(call quantize,$*,$|,$@,-k)
+%.Q2_K_S.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ2_XXS.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ2_XS.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ3_XS.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ3_XXS.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ1_S.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+# %.IQ4_NL.gguf:| %.F16.gguf %.imatrix
+# 	$(call quantize,$*,$|,$@)
+%.IQ3_S.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ3_M.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ2_S.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ2_M.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ4_XS.gguf:| %.F16.gguf %.imatrix
+	$(call quantize,$*,$|,$@)
