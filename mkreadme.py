@@ -22,7 +22,7 @@ def get_model_id(p: Path) -> str:
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', '-f', action='store_true',
                     help='Model ID is actually a file')
-parser.add_argument('--output', '-o', type=Path, default=Path('README.md'),
+parser.add_argument('--output', '-o', type=Path,
                     help='Output file')
 parser.add_argument('model_id', type=str,
                     help='HuggingFace Model ID')
@@ -77,6 +77,8 @@ if not args.context:
         sys.stderr.write("Context not specified and couldn't be inferred, defaulting to 4096\n")
         context = 4096
     args.context = context
+if not args.output:
+    args.output = Path(repo.name + '.info.md')
 
 if args.context % 2048:
     raise ValueError('strange context %d'%(args.context,))
@@ -100,3 +102,4 @@ if args.output.name == '-':
 else:
     with args.output.open('wt', encoding='utf-8') as f:
         f.write(readme)
+        sys.stdout.write(f'Wrote {args.output}\n')
