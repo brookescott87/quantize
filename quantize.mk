@@ -35,6 +35,7 @@ convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab ${convert_opts}
 imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python imatrix_model.py
 
+f32:: $(foreach m,$(MODELS),$m.F32.gguf)
 f16:: $(foreach m,$(MODELS),$m.F16.gguf)
 q8:: $(foreach m,$(MODELS),$m.Q8_0.gguf)
 imat:: $(foreach m,$(MODELS),$m.imatrix)
@@ -45,6 +46,9 @@ quants:: kquants iquants
 
 kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
+
+%.F32.gguf: | models/%
+	$(convert) $| --outtype f32 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
 %.F16.gguf: | models/%
 	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
