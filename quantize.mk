@@ -29,7 +29,7 @@ endif
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
-	$(LLAMA_CPP_BIN)/quantize.exe --background $(if $4,--imatrix $4) $3 $1 $2
+	$(LLAMA_CPP_BIN)/quantize --background $(if $4,--imatrix $4) $3 $1 $2
 
 # quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
@@ -37,7 +37,7 @@ quantize = \
 
 #convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab ${convert_opts}
 convert := python $(LLAMA_CPP_BIN)/convert-hf-to-gguf.py
-imatrix := $(LLAMA_CPP_BIN)/imatrix.exe -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
+imatrix := $(LLAMA_CPP_BIN)/imatrix -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python imatrix_model.py
 
 f32:: $(foreach m,$(MODELS),$m.F32.gguf)
