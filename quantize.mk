@@ -1,11 +1,11 @@
 SRCDIR := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 
-ifndef LLAMA_CPP_ROOT
-$(error LLAMA_CPP_ROOT is not set)
+ifndef TOASTER_ROOT
+$(error TOASTER_ROOT is not set)
 endif
 
-export LLAMA_CPP_BIN := $(LLAMA_CPP_ROOT)/bin
-export LLAMA_CPP_LIB := $(LLAMA_CPP_ROOT)/lib
+export TOASTER_BIN := $(TOASTER_ROOT)/bin
+export TOASTER_LIB := $(TOASTER_ROOT)/lib
 
 KQTYPES := Q2_K Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K
 IQTYPES := IQ2_XXS IQ2_XS IQ3_XS IQ3_XXS IQ1_S IQ3_S IQ3_M IQ2_S IQ2_M IQ4_XS
@@ -30,15 +30,15 @@ endif
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
-	$(LLAMA_CPP_BIN)/quantize --background $(if $4,--imatrix $4) $3 $1 $2
+	$(TOASTER_BIN)/quantize --background $(if $4,--imatrix $4) $3 $1 $2
 
 # quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
 	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
 
-#convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab ${convert_opts}
-convert := python $(LLAMA_CPP_BIN)/convert-hf-to-gguf.py
-imatrix := $(LLAMA_CPP_BIN)/imatrix -f $(SRCDIR)/data/20k_random_data.txt $(IMATRIX_OPTS)
+#convert := python $(TOASTER_BIN)/convert.py --pad-vocab ${convert_opts}
+convert := python $(TOASTER_BIN)/convert-hf-to-gguf.py
+imatrix := $(TOASTER_BIN)/imatrix -f $(SRCDIR)/data/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python $(SRCDIR)/imatrix_model.py
 
 ifdef ABORT
