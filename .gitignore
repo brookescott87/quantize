@@ -1,4 +1,5 @@
 /models/
+/site.mk
 *.gguf
 *.gguf.split-*
 *.imatrix
