@@ -1,3 +1,5 @@
+SRCDIR := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+
 ifndef LLAMA_CPP_ROOT
 $(error LLAMA_CPP_ROOT is not set)
 endif
@@ -15,14 +17,14 @@ QTYPES := Q8_0 $(KQTYPES) $(IQTYPES)
 qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
 
 ifndef MODELS
-MODELS := $(notdir $(wildcard models/*))
+MODELS := $(notdir $(wildcard $(SRCDIR)/models/*))
 endif
 
 xinstall = mkdir -p $3 && $1 $2 $3
 
 ifdef INSTALL_DIR
 VPATH := $(patsubst %,$(INSTALL_DIR)/%-GGUF,$(MODELS))
-install = python install.py $3 $1 $(INSTALL_DIR)/$2
+install = python $(SRCDIR)/install.py $3 $1 $(INSTALL_DIR)/$2
 else
 install = true
 endif
@@ -38,7 +40,7 @@ quantize = \
 #convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab ${convert_opts}
 convert := python $(LLAMA_CPP_BIN)/convert-hf-to-gguf.py
 imatrix := $(LLAMA_CPP_BIN)/imatrix -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
-imatrix_model := python imatrix_model.py
+imatrix_model := python $(SRCDIR)/imatrix_model.py
 
 ifdef ABORT
 $(error Aborted)
@@ -56,10 +58,10 @@ quants:: kquants iquants
 kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
 iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
 
-%.F32.gguf: | models/%
+%.F32.gguf: | $(SRCDIR)/models/%
 	$(convert) $| --outtype f32 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
-%.F16.gguf: | models/%
+%.F16.gguf: | $(SRCDIR)/models/%
 	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
 %.imatrix:| %.F16.gguf %.Q8_0.gguf
