@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import re
 from datetime import datetime as dt

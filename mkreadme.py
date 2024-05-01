@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 from string import Template
 from pathlib import Path, PurePosixPath as RepoPath
