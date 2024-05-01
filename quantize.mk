@@ -5,7 +5,6 @@ $(error LLAMA_CPP_ROOT is not set)
 endif
 
 export LLAMA_CPP_BIN := $(LLAMA_CPP_ROOT)/bin
-export LLAMA_CPP_DATA := $(LLAMA_CPP_ROOT)/data
 export LLAMA_CPP_LIB := $(LLAMA_CPP_ROOT)/lib
 
 KQTYPES := Q2_K Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K
@@ -39,7 +38,7 @@ quantize = \
 
 #convert := python $(LLAMA_CPP_BIN)/convert.py --pad-vocab ${convert_opts}
 convert := python $(LLAMA_CPP_BIN)/convert-hf-to-gguf.py
-imatrix := $(LLAMA_CPP_BIN)/imatrix -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
+imatrix := $(LLAMA_CPP_BIN)/imatrix -f $(SRCDIR)/data/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python $(SRCDIR)/imatrix_model.py
 
 ifdef ABORT
