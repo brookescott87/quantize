@@ -4,6 +4,7 @@
 *.gguf.split-*
 *.imatrix
 *.log
+*.tmp
 imatrix.dat
 README.md
 *.info.md
