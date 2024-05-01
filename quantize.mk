@@ -40,6 +40,10 @@ convert := python $(LLAMA_CPP_BIN)/convert-hf-to-gguf.py
 imatrix := $(LLAMA_CPP_BIN)/imatrix -f $(LLAMA_CPP_DATA)/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python imatrix_model.py
 
+ifdef ABORT
+$(error Aborted)
+endif
+
 f32:: $(foreach m,$(MODELS),$m.F32.gguf)
 f16:: $(foreach m,$(MODELS),$m.F16.gguf)
 q8:: $(foreach m,$(MODELS),$m.Q8_0.gguf)
