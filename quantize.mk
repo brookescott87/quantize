@@ -43,8 +43,8 @@ xquantize = \
 quantize = \
 	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
 
-#convert := python $(TOASTER_BIN)/convert.py --pad-vocab ${convert_opts}
-convert := python $(TOASTER_BIN)/convert-hf-to-gguf.py
+convert := python $(TOASTER_BIN)/convert.py --pad-vocab ${convert_opts}
+#convert := python $(TOASTER_BIN)/convert-hf-to-gguf.py
 imatrix := $(TOASTER_BIN)/imatrix -f $(SRCDIR)/data/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python $(SRCDIR)/imatrix_model.py
 mkreadme := python $(SRCDIR)/mkreadme.py
