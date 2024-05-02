@@ -14,10 +14,17 @@ IQTYPES += Q2_K_S
 QTYPES := Q8_0 $(KQTYPES) $(IQTYPES)
 
 qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
+ifdef OUTPUT_DIR
+qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$(OUTPUT_DIR)/$m-GGUF/$m.$q.gguf)))
+else
+qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$m.$q.gguf)))
+endif
 
 ifndef MODELS
-MODELS := $(notdir $(wildcard $(SRCDIR)/models/*))
+MODELS := $(notdir $(dir $(wildcard $(SRCDIR)/models/*/config.json)))
 endif
+
+qfiles = $(call qfile,$(MODELS),$1)
 
 xinstall = mkdir -p $3 && $1 $2 $3
 
@@ -45,17 +52,17 @@ ifdef ABORT
 $(error Aborted)
 endif
 
-f32:: $(foreach m,$(MODELS),$m.F32.gguf)
-f16:: $(foreach m,$(MODELS),$m.F16.gguf)
-q8:: $(foreach m,$(MODELS),$m.Q8_0.gguf)
-imat:: $(foreach m,$(MODELS),$m.imatrix)
+f32:: $(call qfiles,F32)
+f16:: $(call qfiles,F16)
+q8:: $(call qfiles,Q8_0)
+imat:: $(call qfiles,imatrix)
 
 kquants iquants:: f16 q8
 iquants:: imat
 quants:: kquants iquants
 
-kquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(KQTYPES)))
-iquants:: $(foreach m,$(MODELS),$(patsubst %,$m.%.gguf,$(IQTYPES)))
+kquants:: $(call qfiles,$(KQTYPES))
+iquants:: $(call qfiles,$(IQTYPES))
 
 %.F32.gguf: | $(SRCDIR)/models/%
 	$(convert) $| --outtype f32 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
