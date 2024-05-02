@@ -2,10 +2,17 @@
 import sys
 from string import Template
 from pathlib import Path, PurePosixPath as RepoPath
+import shutil
 import datetime
 import json
 import huggingface_hub
 import argparse
+
+script_dir = Path(__file__).parent
+assets_dir = script_dir / 'assets'
+
+image_files = (assets_dir / 'Faraday Model Repository Banner.png',
+               assets_dir / 'faraday-logo.png')
 
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
@@ -25,6 +32,8 @@ parser.add_argument('--file', '-f', action='store_true',
                     help='Model ID is actually a file')
 parser.add_argument('--output', '-o', type=Path,
                     help='Output file')
+parser.add_argument('--update', '-u', action='store_true',
+                    help='Update existing file')
 parser.add_argument('model_id', type=str,
                     help='HuggingFace Model ID')
 parser.add_argument('--author', '-a', type=str,
@@ -50,9 +59,25 @@ if args.file:
     else:
         raise ValueError(f"Couldn't determine model_id from {args.model_id}")
 
+repo = RepoPath(args.model_id)
+
+if not args.output:
+    args.output = Path(repo.name + '.info.md')
+
+if not args.output.name == '-':
+    output_dir = args.output.parent if args.output.suffix == '.md' else args.output
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if args.output.is_dir() and not args.output == script_dir:
+        for srcimg in image_files:
+            dstimg = args.output / srcimg.name
+            if not dstimg.exists():
+                shutil.copy(srcimg, dstimg)
+        args.output = args.output / 'README.md'
+    if args.output.exists() and not args.update:
+        sys.exit()
+
 model_info = hfapi.model_info(args.model_id)
 card_data = model_info.card_data
-repo = RepoPath(args.model_id)
 config = json.loads(hfs.cat_file(repo / 'config.json'))
 
 if not card_data.model_name == repo.name:
@@ -80,8 +105,6 @@ if not args.context:
         sys.stderr.write("Context not specified and couldn't be inferred, defaulting to 4096\n")
         context = 4096
     args.context = context
-if not args.output:
-    args.output = Path(repo.name + '.info.md')
 
 if args.context % 2048:
     raise ValueError('strange context %d'%(args.context,))
@@ -94,8 +117,6 @@ card_data.eval_results = None
 
 args.metadata = card_data.to_yaml()
 
-script_dir = Path(__file__).parent
-assets_dir = script_dir / 'assets'
 with open(assets_dir/'README.md.template','rt',encoding='utf-8') as f:
     template = Template(f.read())
 
