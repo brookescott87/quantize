@@ -47,6 +47,7 @@ quantize = \
 convert := python $(TOASTER_BIN)/convert-hf-to-gguf.py
 imatrix := $(TOASTER_BIN)/imatrix -f $(SRCDIR)/data/20k_random_data.txt $(IMATRIX_OPTS)
 imatrix_model := python $(SRCDIR)/imatrix_model.py
+mkreadme := python $(SRCDIR)/mkreadme.py
 
 ifdef ABORT
 $(error Aborted)
