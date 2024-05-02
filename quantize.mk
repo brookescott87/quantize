@@ -21,7 +21,7 @@ qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$m.$q.
 endif
 
 ifndef MODELS
-MODELS := $(notdir $(dir $(wildcard $(SRCDIR)/models/*/config.json)))
+MODELS := $(notdir $(patsubst %/,%,$(dir $(wildcard $(SRCDIR)/models/*/config.json))))
 endif
 
 qfiles = $(call qfile,$(MODELS),$1)
