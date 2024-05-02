@@ -1,4 +1,5 @@
 /models/
+/output/
 /site.mk
 *.gguf
 *.gguf.split-*
