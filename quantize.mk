@@ -65,11 +65,13 @@ quants:: kquants iquants
 kquants:: $(call qfiles,$(KQTYPES))
 iquants:: $(call qfiles,$(IQTYPES))
 
-%.F32.gguf: | $(SRCDIR)/models/%
-	$(convert) $| --outtype f32 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.F32.gguf:
+	$(mkreadme) -o $(@D) -f $(SRCDIR)/models/$(notdir $*)
+	$(convert) $(SRCDIR)/models/$(notdir $*) --outtype f32 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
-%.F16.gguf: | $(SRCDIR)/models/%
-	$(convert) $| --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.F16.gguf:
+	$(mkreadme) -o $(@D) -f $(SRCDIR)/models/$(notdir $*)
+	$(convert) $(SRCDIR)/models/$(notdir $*) --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
 %.imatrix:| %.F16.gguf %.Q8_0.gguf
 	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
