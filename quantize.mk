@@ -61,6 +61,7 @@ imat:: $(call qfiles,imatrix)
 kquants iquants:: f16 q8
 iquants:: imat
 quants:: kquants iquants
+all:: quants
 
 kquants:: $(call qfiles,$(KQTYPES))
 iquants:: $(call qfiles,$(IQTYPES))
