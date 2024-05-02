@@ -73,8 +73,13 @@ iquants:: $(call qfiles,$(IQTYPES))
 	$(mkreadme) -o $(@D) -f $(SRCDIR)/models/$(notdir $*)
 	$(convert) $(SRCDIR)/models/$(notdir $*) --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 
+ifdef LOWMEM
 %.imatrix:| %.F16.gguf %.Q8_0.gguf
 	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+else
+%.imatrix:| %.F16.gguf
+	$(imatrix) -o $@.tmp -m $| && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+endif
 
 .DELETE_ON_ERROR:
 
