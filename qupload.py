@@ -9,14 +9,6 @@ import argparse
 MAX_UPLOAD_SIZE = 50_000_000_000
 TOASTER = Path(os.environ['TOASTER'])
 
-upload_patterns = [
-    'README.md',
-    '*.png',
-    '*.imatrix',
-    '*.gguf'
-]
-
-qsuffixes = ('.gguf', '.imatrix', '.md', '.png')
 gguf_split_exe = TOASTER/'bin'/'gguf-split'
 
 def oversize_ggufs(d: Path) -> list[Path]:
@@ -39,14 +31,23 @@ parser = argparse.ArgumentParser()
 parser.add_argument('directory', type=Path, help='Directory containing quant.')
 parser.add_argument('--initialize', '-i', action='store_true', help="Create new if doesn't exist") 
 parser.add_argument('--retries', '-r', type=int, help='Number of times to retry')
+parser.add_argument('--no-ggufs', '-g', action='store_true', help='Exclude GGUFs from upload')
 args = parser.parse_args()
+
+upload_patterns = [
+    'README.md',
+    '*.png',
+    '*.imatrix'
+]
 
 qdir = args.directory.absolute()
 
 if not qdir.is_dir():
     raise ValueError(f'"{qdir}" is not a directory.')
 
-check_quant(qdir)
+if not args.no_ggufs:
+    upload_patterns.append('*.gguf')
+    check_quant(qdir)
 
 repo = qdir.name
 owner = qdir.parent.name
