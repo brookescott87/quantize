@@ -30,7 +30,7 @@ def check_quant(qdir):
 parser = argparse.ArgumentParser()
 parser.add_argument('directory', type=Path, help='Directory containing quant.')
 parser.add_argument('--initialize', '-i', action='store_true', help="Create new if doesn't exist") 
-parser.add_argument('--retries', '-r', type=int, help='Number of times to retry')
+parser.add_argument('--retries', '-r', type=int, default=0, help='Number of times to retry')
 parser.add_argument('--no-ggufs', '-g', action='store_true', help='Exclude GGUFs from upload')
 args = parser.parse_args()
 
