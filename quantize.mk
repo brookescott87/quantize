@@ -37,7 +37,7 @@ endif
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
-	$(TOASTER_BIN)/quantize --background $(if $4,--imatrix $4) $3 $1 $2
+	$(TOASTER_BIN)/quantize $(if $4,--imatrix $4) $3 $1 $2
 
 # quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
