@@ -17,15 +17,15 @@ image_files = (assets_dir / 'Faraday Model Repository Banner.png',
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
 
-def get_model_id(p: Path) -> str:
+def get_model_id(p: Path) -> RepoPath:
     if not p.exists():
         raise ValueError(f'{p} does not exist')
     if p.is_symlink():
         return get_model_id(p.readlink())
     for s in p.parts:
         if s.startswith('models--'):
-            return s[8:].replace('--', '/')
-    return None
+            return RepoPath(s[8:].replace('--', '/'))
+    raise ValueError(f'{p} does not resolve to a repository')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', '-f', action='store_true',
@@ -40,8 +40,8 @@ parser.add_argument('--author', '-a', type=str,
                     help='Model author ID')
 parser.add_argument('--title', '-t', type=str,
                     help='Model title')
-parser.add_argument('--name', '-n', type=str,
-                    help='Model name')
+# parser.add_argument('--name', '-n', type=str,
+#                     help='Model name')
 parser.add_argument('--context', '-c', type=int,
                     help='Model context size')
 parser.add_argument('--mistral', '-M', action='store_true',
@@ -54,12 +54,10 @@ parser.add_argument('--description', '--desc', '-s', type=str, default='(Add des
 args = parser.parse_args()
 
 if args.file:
-    if model_id := get_model_id(Path(args.model_id)):
-        args.model_id = model_id
-    else:
-        raise ValueError(f"Couldn't determine model_id from {args.model_id}")
-
-repo = RepoPath(args.model_id)
+    repo = get_model_id(model_id := Path(args.model_id))
+else:
+    repo = model_id = RepoPath(args.model_id)
+quant_name = model_id.name + '-GGUF'
 
 if not args.output:
     args.output = Path(repo.name + '.info.md')
@@ -76,24 +74,24 @@ if not args.output.name == '-':
     if args.output.exists() and not args.update:
         sys.exit()
 
-model_info = hfapi.model_info(args.model_id)
+model_info = hfapi.model_info(str(repo))
 card_data = model_info.card_data
 config = json.loads(hfs.cat_file(repo / 'config.json'))
 
 if not card_data.model_name == repo.name:
     if card_data.model_name:
         sys.stderr.write(f'Warning: card_data says model name is {card_data.model_name}\n')
-        sys.stderr.write(f'but model_id is {args.model_id}\n')
+        sys.stderr.write(f'but model_id is {str(repo)}\n')
         raise ValueError('Model name mismatch')
     else:
         sys.stderr.write("Warning: model name not set in base model's metadata\n")
 
 if not args.author:
     args.author = model_info.author
-if not args.name:
-    args.name = repo.name + '-GGUF'
+# if not args.name:
+#     args.name = model_id.name + '-GGUF'
 if not args.title:
-    args.title = repo.name.replace('-',' ')
+    args.title = model_id.name.replace('-',' ')
 if not args.date:
     args.date = model_info.created_at.date()
 if not args.context:
@@ -109,8 +107,8 @@ if not args.context:
 if args.context % 2048:
     raise ValueError('strange context %d'%(args.context,))
 
-card_data.base_model = args.model_id
-card_data.model_name = args.name
+card_data.base_model = str(repo)
+card_data.model_name = quant_name
 card_data.quantized_by = 'brooketh'
 card_data.widget = None
 card_data.eval_results = None
