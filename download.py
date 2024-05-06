@@ -7,13 +7,19 @@ import argparse
 parser = argparse.ArgumentParser(prog=os.getenv('PROGRAM'))
 parser.add_argument('repo_id', type=str,
                     help='Repo id of model to retrieve')
-parser.add_argument('destdir', type=Path, default=Path('models'), nargs='?',
+parser.add_argument('destdir', type=Path, nargs='?',
                     help='Directory into which a link to the model will be put')
 args = parser.parse_args()
 
 if not '/' in args.repo_id:
     raise ValueError('repo_id must be of the form owner/model')
 owner, model = args.repo_id.split('/')
+
+if not args.destdir:
+    if model.lower().endswith('-gguf'):
+        args.destdir = Path('models/ref')
+    else:
+        args.destdir = Path('models/base')
 
 if not args.destdir.is_dir():
     if args.destdir.exists():
