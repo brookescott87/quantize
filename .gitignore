@@ -6,6 +6,7 @@
 *.imatrix
 *.log
 *.tmp
+*.swp
 imatrix.dat
 README.md
 *.info.md
