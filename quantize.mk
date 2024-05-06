@@ -1,4 +1,5 @@
 SRCDIR := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+MODELBASE := $(SRCDIR)/models/base
 
 ifndef TOASTER_ROOT
 $(error TOASTER_ROOT is not set)
@@ -14,15 +15,21 @@ IQTYPES += Q2_K_S
 QTYPES := Q8_0 $(KQTYPES) $(IQTYPES)
 
 qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
-ifdef OUTPUT_DIR
-qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$(OUTPUT_DIR)/$m-GGUF/$m.$q.gguf)))
+ifdef OUTPUT_REPO
+OUTPUT_ROOT := output/$(OUTPUT_REPO)
+qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$(OUTPUT_ROOT)/$m-GGUF/$m.$q.gguf)))
 else
 qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$m.$q.gguf)))
 endif
 
 ifndef MODELS
-MODELS := $(notdir $(patsubst %/,%,$(dir $(wildcard $(SRCDIR)/models/*/config.json))))
+MODELS := $(notdir $(wildcard $(MODELBASE)/*))
 endif
+
+OUTPUTDIRS := $(if $(OUTPUT_ROOT),$(patsubst %,$(OUTPUT_ROOT)/%-GGUF,$(MODELS)))
+
+listmodels::
+	@echo "Models: $(MODELS)"
 
 qfiles = $(call qfile,$(MODELS),$1)
 
@@ -43,12 +50,16 @@ xquantize = \
 quantize = \
 	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
 
-ifdef convert_hf
-convert := python $(TOASTER_BIN)/convert-hf-to-gguf.py ${convert_opts}
+xconvert = python $(TOASTER_BIN)/$1 --outtype $3 --outfile $4.tmp $(convert_opts) $2 && mv $4.tmp $4 
+
+ifdef old_convert
+convert_py := convert.py --pad-vocab
 else
-convert := python $(TOASTER_BIN)/convert.py --pad-vocab ${convert_opts}
+convert_py := convert-hf-to-gguf.py
 endif
-imatrix := $(TOASTER_BIN)/imatrix -f $(SRCDIR)/data/20k_random_data.txt $(IMATRIX_OPTS)
+
+convert = $(call xconvert,$(convert_py),$1,$2,$3)
+imatrix := $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS)
 imatrix_model := python $(SRCDIR)/imatrix_model.py
 mkreadme := python $(SRCDIR)/mkreadme.py
 
@@ -69,21 +80,26 @@ all:: quants
 kquants:: $(call qfiles,$(KQTYPES))
 iquants:: $(call qfiles,$(IQTYPES))
 
-%.F32.gguf:
-	$(mkreadme) -o $(@D) -f $(SRCDIR)/models/$(notdir $*)
-	$(convert) $(SRCDIR)/models/$(notdir $*) --outtype f32 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+$(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
+	mkdir -p $@
+	$(mkreadme) -o $@ -f $| 
 
-%.F16.gguf:
-	$(mkreadme) -o $(@D) -f $(SRCDIR)/models/$(notdir $*)
-	$(convert) $(SRCDIR)/models/$(notdir $*) --outtype f16 --outfile $@.tmp && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.F32.gguf: $(OUTPUTDIRS)
+	$(call convert,$(MODELBASE)/$(notdir $*),f32,$@)
+
+%.F16.gguf: $(OUTPUTDIRS)
+	$(call convert,$(MODELBASE)/$(notdir $*),f16,$@)
 
 ifdef LOWMEM
-%.imatrix:| %.F16.gguf %.Q8_0.gguf
-	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.imatrix:| %.F16.gguf %.Q8_0.gguf %.dataset.txt
+	$(imatrix) -o $@.tmp -f $(filter %.txt,$|) -m $(shell $(imatrix_model) $(filter-out %.txt,$|)) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 else
-%.imatrix:| %.F16.gguf
-	$(imatrix) -o $@.tmp -m $| && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.imatrix:| %.F16.gguf %.dataset.txt
+	$(imatrix) -o $@.tmp -f $(filter %.txt,$|) -m $(filter-out %.txt,$|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 endif
+
+%.dataset.txt: $(SRCDIR)/data/20k_random_data.txt
+	cp $^ $@
 
 .DELETE_ON_ERROR:
 
