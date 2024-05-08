@@ -15,6 +15,8 @@ split_rx = re.compile('.*-split-\d{5}-of-\d{5}\.gguf$')
 TOASTER = Path(os.environ['TOASTER'])
 gguf_split_exe = TOASTER/'bin'/'gguf-split'
 
+hfapi = huggingface_hub.HfApi()
+
 def timestamp():
     return dt.strftime(dt.now(get_localzone()), '%Y/%m/%d-%H:%M:%S(%Z)')
 
@@ -57,38 +59,40 @@ def upload_file(p: Path, repo_id: str, new_name:str = None) -> bool:
         return True
     return False
 
-if (hf_key := 'HF_HUB_ENABLE_HF_TRANSFER') in os.environ:
-    del os.environ[hf_key]
+def main():
+    if (hf_key := 'HF_HUB_ENABLE_HF_TRANSFER') in os.environ:
+        del os.environ[hf_key]
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dir', '-d', type=Path,
-                    help='Directory for source files')
-parser.add_argument
-args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dir', '-d', type=Path,
+                        help='Directory for source files')
+    parser.add_argument
+    args = parser.parse_args()
 
-hfapi = huggingface_hub.HfApi()
+    if args.dir:
+        os.chdir(args.dir)
 
-if args.dir:
-    os.chdir(args.dir)
+    cwd = Path('.')
+    acwd = cwd.absolute()
+    repo = acwd.name
+    owner = acwd.parent.name
+    repo_id = f'{owner}/{repo}'
 
-cwd = Path('.')
-acwd = cwd.absolute()
-repo = acwd.name
-owner = acwd.parent.name
-repo_id = f'{owner}/{repo}'
+    clear_screen.clear()
+    while f := next_file(cwd):
+        if f.stat().st_size > MAX_UPLOAD_SIZE:
+            gguf_split(f)
+        else:
+            try:
+                if hfapi.file_exists(repo_id, f.name):
+                    print(f'Removing {f.name}')
+                    f.unlink()
+                else:
+                    upload_file(f, repo_id)
+            except KeyboardInterrupt:
+                print('\n*** Keyboard interrupt ***')
+                break
+        print()
 
-clear_screen.clear()
-while f := next_file(cwd):
-    if f.stat().st_size > MAX_UPLOAD_SIZE:
-        gguf_split(f)
-    else:
-        try:
-            if hfapi.file_exists(repo_id, f.name):
-                print(f'Removing {f.name}')
-                f.unlink()
-            else:
-                upload_file(f, repo_id)
-        except KeyboardInterrupt:
-            print('\n*** Keyboard interrupt ***')
-            break
-    print()
+if __name__ == '__main__':
+    main()

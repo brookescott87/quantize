@@ -27,101 +27,105 @@ def get_model_id(p: Path) -> RepoPath:
             return RepoPath(s[8:].replace('--', '/'))
     raise ValueError(f'{p} does not resolve to a repository')
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--file', '-f', action='store_true',
-                    help='Model ID is actually a file')
-parser.add_argument('--output', '-o', type=Path,
-                    help='Output file')
-parser.add_argument('--update', '-u', action='store_true',
-                    help='Update existing file')
-parser.add_argument('model_id', type=str,
-                    help='HuggingFace Model ID')
-parser.add_argument('--author', '-a', type=str,
-                    help='Model author ID')
-parser.add_argument('--title', '-t', type=str,
-                    help='Model title')
-# parser.add_argument('--name', '-n', type=str,
-#                     help='Model name')
-parser.add_argument('--context', '-c', type=int,
-                    help='Model context size')
-parser.add_argument('--mistral', '-M', action='store_true',
-                    help='Mistral compatibility switch')
-parser.add_argument('--date', '-d',
-                    type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d').date(),
-                    help='Model creation date')
-parser.add_argument('--description', '--desc', '-s', type=str, default='(Add description here)',
-                    help='Model description')
-args = parser.parse_args()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', '-f', action='store_true',
+                        help='Model ID is actually a file')
+    parser.add_argument('--output', '-o', type=Path,
+                        help='Output file')
+    parser.add_argument('--update', '-u', action='store_true',
+                        help='Update existing file')
+    parser.add_argument('model_id', type=str,
+                        help='HuggingFace Model ID')
+    parser.add_argument('--author', '-a', type=str,
+                        help='Model author ID')
+    parser.add_argument('--title', '-t', type=str,
+                        help='Model title')
+    # parser.add_argument('--name', '-n', type=str,
+    #                     help='Model name')
+    parser.add_argument('--context', '-c', type=int,
+                        help='Model context size')
+    parser.add_argument('--mistral', '-M', action='store_true',
+                        help='Mistral compatibility switch')
+    parser.add_argument('--date', '-d',
+                        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d').date(),
+                        help='Model creation date')
+    parser.add_argument('--description', '--desc', '-s', type=str, default='(Add description here)',
+                        help='Model description')
+    args = parser.parse_args()
 
-if args.file:
-    repo = get_model_id(model_id := Path(args.model_id))
-else:
-    repo = model_id = RepoPath(args.model_id)
-quant_name = model_id.name + '-GGUF'
-
-if not args.output:
-    args.output = Path(repo.name + '.info.md')
-
-if not args.output.name == '-':
-    output_dir = args.output.parent if args.output.suffix == '.md' else args.output
-    output_dir.mkdir(parents=True, exist_ok=True)
-    if args.output.is_dir() and not args.output == script_dir:
-        for srcimg in image_files:
-            dstimg = args.output / srcimg.name
-            if not dstimg.exists():
-                shutil.copy(srcimg, dstimg)
-        args.output = args.output / 'README.md'
-    if args.output.exists() and not args.update:
-        sys.exit()
-
-model_info = hfapi.model_info(str(repo))
-card_data = model_info.card_data
-config = json.loads(hfs.cat_file(repo / 'config.json'))
-
-if not card_data.model_name == repo.name:
-    if card_data.model_name:
-        sys.stderr.write(f'Warning: card_data says model name is {card_data.model_name}\n')
-        sys.stderr.write(f'but model_id is {str(repo)}\n')
-        raise ValueError('Model name mismatch')
+    if args.file:
+        repo = get_model_id(model_id := Path(args.model_id))
     else:
-        sys.stderr.write("Warning: model name not set in base model's metadata\n")
+        repo = model_id = RepoPath(args.model_id)
+    quant_name = model_id.name + '-GGUF'
 
-if not args.author:
-    args.author = model_info.author
-# if not args.name:
-#     args.name = model_id.name + '-GGUF'
-if not args.title:
-    args.title = model_id.name.replace('-',' ')
-if not args.date:
-    args.date = model_info.created_at.date()
-if not args.context:
-    if context := config.get('max_sequence_length') or config.get('max_position_embeddings'):
-        if args.mistral and context > 8192:
-            sys.stderr.write(f'Reducing max context from {context} to 8192\n')
-            context = 8192
+    if not args.output:
+        args.output = Path(repo.name + '.info.md')
+
+    if not args.output.name == '-':
+        output_dir = args.output.parent if args.output.suffix == '.md' else args.output
+        output_dir.mkdir(parents=True, exist_ok=True)
+        if args.output.is_dir() and not args.output == script_dir:
+            for srcimg in image_files:
+                dstimg = args.output / srcimg.name
+                if not dstimg.exists():
+                    shutil.copy(srcimg, dstimg)
+            args.output = args.output / 'README.md'
+        if args.output.exists() and not args.update:
+            sys.exit()
+
+    model_info = hfapi.model_info(str(repo))
+    card_data = model_info.card_data
+    config = json.loads(hfs.cat_file(repo / 'config.json'))
+
+    if not card_data.model_name == repo.name:
+        if card_data.model_name:
+            sys.stderr.write(f'Warning: card_data says model name is {card_data.model_name}\n')
+            sys.stderr.write(f'but model_id is {str(repo)}\n')
+            raise ValueError('Model name mismatch')
+        else:
+            sys.stderr.write("Warning: model name not set in base model's metadata\n")
+
+    if not args.author:
+        args.author = model_info.author
+    # if not args.name:
+    #     args.name = model_id.name + '-GGUF'
+    if not args.title:
+        args.title = model_id.name.replace('-',' ')
+    if not args.date:
+        args.date = model_info.created_at.date()
+    if not args.context:
+        if context := config.get('max_sequence_length') or config.get('max_position_embeddings'):
+            if args.mistral and context > 8192:
+                sys.stderr.write(f'Reducing max context from {context} to 8192\n')
+                context = 8192
+        else:
+            sys.stderr.write("Context not specified and couldn't be inferred, defaulting to 4096\n")
+            context = 4096
+        args.context = context
+
+    if args.context % 2048:
+        raise ValueError('strange context %d'%(args.context,))
+
+    card_data.base_model = str(repo)
+    card_data.model_name = quant_name
+    card_data.quantized_by = 'brooketh'
+    card_data.widget = None
+    card_data.eval_results = None
+
+    args.metadata = card_data.to_yaml()
+
+    with open(assets_dir/'README.md.template','rt',encoding='utf-8') as f:
+        template = Template(f.read())
+
+    readme = template.substitute(vars(args))
+    if args.output.name == '-':
+        print(readme)
     else:
-        sys.stderr.write("Context not specified and couldn't be inferred, defaulting to 4096\n")
-        context = 4096
-    args.context = context
+        with args.output.open('wt', encoding='utf-8') as f:
+            f.write(readme)
+            sys.stdout.write(f'Wrote {args.output}\n')
 
-if args.context % 2048:
-    raise ValueError('strange context %d'%(args.context,))
-
-card_data.base_model = str(repo)
-card_data.model_name = quant_name
-card_data.quantized_by = 'brooketh'
-card_data.widget = None
-card_data.eval_results = None
-
-args.metadata = card_data.to_yaml()
-
-with open(assets_dir/'README.md.template','rt',encoding='utf-8') as f:
-    template = Template(f.read())
-
-readme = template.substitute(vars(args))
-if args.output.name == '-':
-    print(readme)
-else:
-    with args.output.open('wt', encoding='utf-8') as f:
-        f.write(readme)
-        sys.stdout.write(f'Wrote {args.output}\n')
+if __name__ == '__main__':
+    main()
