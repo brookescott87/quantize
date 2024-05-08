@@ -14,6 +14,9 @@ IQTYPES += Q2_K_S
 
 QTYPES := Q8_0 $(KQTYPES) $(IQTYPES)
 
+listqtypes::
+	@echo "Quant types: $(QTYPES)"
+
 qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
 ifdef OUTPUT_REPO
 OUTPUT_ROOT := output/$(OUTPUT_REPO)
