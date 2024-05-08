@@ -88,10 +88,10 @@ $(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
 	mkdir -p $@
 	$(mkreadme) -o $@ -f $| 
 
-%.F32.gguf: $(OUTPUTDIRS)
+%.F32.gguf:| $(OUTPUTDIRS)
 	$(call convert,$(MODELBASE)/$(notdir $*),f32,$@)
 
-%.F16.gguf: $(OUTPUTDIRS)
+%.F16.gguf:| $(OUTPUTDIRS)
 	$(call convert,$(MODELBASE)/$(notdir $*),f16,$@)
 
 ifdef LOWMEM
