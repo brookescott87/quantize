@@ -62,8 +62,9 @@ convert_py := convert-hf-to-gguf.py
 endif
 
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
-imatrix := $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS)
+imatrix_data := $(patsubst ./%,%,$(SRCDIR)/imatrix.dataset.txt)
 imatrix_model := python $(SRCDIR)/imatrix_model.py
+imatrix := $(TOASTER_BIN)/imatrix -f $(imatrix_data) $(IMATRIX_OPTS)
 mkreadme := python $(SRCDIR)/mkreadme.py
 
 ifdef ABORT
@@ -94,15 +95,12 @@ $(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
 	$(call convert,$(MODELBASE)/$(notdir $*),f16,$@)
 
 ifdef LOWMEM
-%.imatrix:| %.F16.gguf %.Q8_0.gguf %.dataset.txt
-	$(imatrix) -o $@.tmp -f $(filter %.txt,$|) -m $(shell $(imatrix_model) $(filter-out %.txt,$|)) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.imatrix:| %.F16.gguf %.Q8_0.gguf
+	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 else
-%.imatrix:| %.F16.gguf %.dataset.txt
-	$(imatrix) -o $@.tmp -f $(filter %.txt,$|) -m $(filter-out %.txt,$|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
+%.imatrix:| %.F16.gguf
+	$(imatrix) -o $@.tmp -m $| && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
 endif
-
-%.dataset.txt: $(SRCDIR)/data/20k_random_data.txt
-	cp $^ $@
 
 .DELETE_ON_ERROR:
 
