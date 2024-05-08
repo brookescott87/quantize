@@ -8,6 +8,16 @@ endif
 export TOASTER_BIN := $(TOASTER_ROOT)/bin
 export TOASTER_LIB := $(TOASTER_ROOT)/lib
 
+ifndef HF_ORGANIZATION
+ifdef HF_DEFAULT_ORGANIZATION
+export HF_ORGANIZATION := $(HF_DEFAULT_ORGANIZATION)
+else
+$(error HF_ORGANIZATION is not set)
+endif
+endif
+
+export OUTPUT_ROOT := output/$(HF_ORGANIZATION)
+
 IQTYPES := IQ1_S IQ2_XXS IQ2_XS IQ2_S IQ2_M Q2_K_S Q2_K
 IQTYPES += IQ3_XXS IQ3_XS Q3_K_S IQ3_S IQ3_M Q3_K_M Q3_K_L IQ4_XS
 KQTYPES := Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
@@ -18,12 +28,7 @@ listqtypes::
 	@echo "Quant types: $(QTYPES)"
 
 qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
-ifdef OUTPUT_REPO
-OUTPUT_ROOT := output/$(OUTPUT_REPO)
 qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$(OUTPUT_ROOT)/$m-GGUF/$m.$q.gguf)))
-else
-qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$m.$q.gguf)))
-endif
 
 ifndef MODELS
 MODELS := $(notdir $(wildcard $(MODELBASE)/*))
