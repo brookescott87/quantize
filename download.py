@@ -9,17 +9,24 @@ parser.add_argument('repo_id', type=str,
                     help='Repo id of model to retrieve')
 parser.add_argument('destdir', type=Path, nargs='?',
                     help='Directory into which a link to the model will be put')
+parser.add_argument('--affix', '-a', type=str, default='',
+                    help='Local affix to model name')
 args = parser.parse_args()
+
+if args.affix and not args.affix.startswith('-'):
+    args.affix = '-' + args.affix
 
 if not '/' in args.repo_id:
     raise ValueError('repo_id must be of the form owner/model')
 owner, model = args.repo_id.split('/')
 
 if not args.destdir:
-    if model.lower().endswith('-gguf'):
+    if model.upper().endswith('-GGUF'):
         args.destdir = Path('models/ref')
+        model = model[:-5] + args.affix + '-GGUF'
     else:
         args.destdir = Path('models/base')
+        model = model + args.affix
 
 if not args.destdir.is_dir():
     if args.destdir.exists():
