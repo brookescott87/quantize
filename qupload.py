@@ -7,9 +7,9 @@ import huggingface_hub
 import argparse
 
 MAX_UPLOAD_SIZE = 50_000_000_000
-TOASTER = Path(os.environ['TOASTER'])
-
+TOASTER = Path(os.environ['TOASTER_ROOT'])
 gguf_split_exe = TOASTER/'bin'/'gguf-split'
+
 hfapi = huggingface_hub.HfApi()
 
 def oversize_ggufs(d: Path) -> list[Path]:

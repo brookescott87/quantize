@@ -10,12 +10,12 @@ import huggingface_hub
 import argparse
 
 MAX_UPLOAD_SIZE = 50_000_000_000
-split_rx = re.compile('.*-split-\d{5}-of-\d{5}\.gguf$')
-
-TOASTER = Path(os.environ['TOASTER'])
+TOASTER = Path(os.environ['TOASTER_ROOT'])
 gguf_split_exe = TOASTER/'bin'/'gguf-split'
 
 hfapi = huggingface_hub.HfApi()
+
+split_rx = re.compile('.*-split-\d{5}-of-\d{5}\.gguf$')
 
 def timestamp():
     return dt.strftime(dt.now(get_localzone()), '%Y/%m/%d-%H:%M:%S(%Z)')
