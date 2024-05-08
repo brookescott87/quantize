@@ -8,11 +8,11 @@ endif
 export TOASTER_BIN := $(TOASTER_ROOT)/bin
 export TOASTER_LIB := $(TOASTER_ROOT)/lib
 
-KQTYPES := Q2_K Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K
-IQTYPES := IQ2_XXS IQ2_XS IQ3_XS IQ3_XXS IQ1_S IQ3_S IQ3_M IQ2_S IQ2_M IQ4_XS
-IQTYPES += Q2_K_S
+IQTYPES := IQ1_S IQ2_XXS IQ2_XS IQ2_S IQ2_M Q2_K_S Q2_K
+IQTYPES += IQ3_XXS IQ3_XS Q3_K_S IQ3_S IQ3_M Q3_K_M Q3_K_L IQ4_XS
+KQTYPES := Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 
-QTYPES := Q8_0 $(KQTYPES) $(IQTYPES)
+QTYPES := $(KQTYPES) $(IQTYPES)
 
 listqtypes::
 	@echo "Quant types: $(QTYPES)"
@@ -47,7 +47,7 @@ endif
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
-	$(TOASTER_BIN)/quantize $(if $4,--imatrix $4) $3 $1 $2
+	$(TOASTER_BIN)/quantize $(and $(filter $2,$(IQTYPES)),$4,--imatrix $4) $3 $1 $2
 
 # quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
@@ -104,25 +104,25 @@ endif
 
 .DELETE_ON_ERROR:
 
-%.Q2_K.gguf:| %.F16.gguf
+%.Q2_K.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q3_K_S.gguf:| %.F16.gguf
+%.Q3_K_S.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q3_K_M.gguf:| %.F16.gguf
+%.Q3_K_M.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q3_K_L.gguf:| %.F16.gguf
+%.Q3_K_L.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q4_K_S.gguf:| %.F16.gguf
+%.Q4_K_S.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q4_K_M.gguf:| %.F16.gguf
+%.Q4_K_M.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q5_K_S.gguf:| %.F16.gguf
+%.Q5_K_S.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q5_K_M.gguf:| %.F16.gguf
+%.Q5_K_M.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q6_K.gguf:| %.F16.gguf
+%.Q6_K.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q8_0.gguf:| %.F16.gguf
+%.Q8_0.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@,-k)
 %.Q2_K_S.gguf:| %.F16.gguf %.imatrix
 	$(call quantize,$*,$|,$@)
