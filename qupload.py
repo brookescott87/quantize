@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--initialize', '-i', action='store_true', help="Create new if doesn't exist") 
     parser.add_argument('--retries', '-r', type=int, default=0, help='Number of times to retry')
     parser.add_argument('--no-ggufs', '-g', action='store_true', help='Exclude GGUFs from upload')
+    parser.add_argument('--no-upload', '-n', action='store_true', help='Do not upload any files')
     args = parser.parse_args()
 
     upload_patterns = [
@@ -62,19 +63,20 @@ def main():
         else:
             raise ValueError(f'Repository {repo_id} does not exist and --initialize not given')
 
-    print(f'Uploading {repo_id}')
+    if not args.no_upload:
+        print(f'Uploading {repo_id}')
 
-    retries = 0
+        retries = 0
 
-    while retries <= args.retries:
-        try:
-            hfapi.upload_folder(repo_id=repo_id, folder_path=qdir, commit_message=f'Upload {repo}.',
-                                repo_type='model', allow_patterns=upload_patterns)
-        except RuntimeError:
-            retries += 1
-            print(f'Upload failed (retries = {retries})')
-        else:
-            break
+        while retries <= args.retries:
+            try:
+                hfapi.upload_folder(repo_id=repo_id, folder_path=qdir, commit_message=f'Upload {repo}.',
+                                    repo_type='model', allow_patterns=upload_patterns)
+            except RuntimeError:
+                retries += 1
+                print(f'Upload failed (retries = {retries})')
+            else:
+                break
 
 if __name__ == '__main__':
     main()
