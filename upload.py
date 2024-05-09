@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 import re
-from datetime import datetime as dt, UTC
+from datetime import datetime as dt
 from tzlocal import get_localzone
 from pathlib import Path
 import subprocess
@@ -89,7 +89,7 @@ def file_is_newer(repo_id : str, f : Path):
         lf = f.stat()
         if not lf.st_size == rf.size:
             return True
-        if dt.fromtimestamp(lf.st_mtime, tz = UTC) > lf.last_commit.date:
+        if lf.st_mtime > rf.last_commit.date.timestamp():
             return True
     return False
 
