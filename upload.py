@@ -66,6 +66,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', '-d', type=Path,
                         help='Directory for source files')
+    parser.add_argument('--keep', '-k', action='store_true',
+                        help='Do not delete files.')
     parser.add_argument
     args = parser.parse_args()
 
@@ -85,8 +87,12 @@ def main():
         else:
             try:
                 if hfapi.file_exists(repo_id, f.name):
-                    print(f'Removing {f.name}')
-                    f.unlink()
+                    if args.keep:
+                        print(f'Renaming {f.name}')
+                        f.rename(f.with_suffix('.dead'))
+                    else:
+                        print(f'Removing {f.name}')
+                        f.unlink()
                 else:
                     upload_file(f, repo_id)
             except KeyboardInterrupt:
