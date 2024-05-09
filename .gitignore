@@ -1,5 +1,6 @@
 /models/
 /output/
+/__pycache__/
 /site.mk
 *.gguf
 *.gguf.split-*
@@ -7,6 +8,7 @@
 *.log
 *.tmp
 *.swp
+*.pyc
 imatrix.dat
 README.md
 *.info.md
