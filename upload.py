@@ -40,7 +40,7 @@ def gguf_split(p: Path):
     result = subprocess.run([gguf_split_exe, '--split-max-size', str(MAX_UPLOAD_SIZE), p])
     if result.returncode:
         raise RuntimeError(f'gguf-split returned {result.returncode}')
-    p.rename(p.with_suffix('.dead'))
+    remove_file(p)
 
 def upload_file(p: Path, repo_id: str, new_name:str = None) -> bool:
     name = new_name or p.name
@@ -59,6 +59,20 @@ def upload_file(p: Path, repo_id: str, new_name:str = None) -> bool:
         return True
     return False
 
+def remove_file(p:Path, destroy:bool=False):
+    if destroy:
+        print(f'Removing {p.name}')
+        p.unlink()
+    else:
+        pdead = p.with_suffix('.dead')
+        num = 0
+        while pdead.exists():
+            num += 1
+            pdead = p.with_suffix(f'.dead{num}')
+        print(f'Renaming {p.name} to {pdead.name}')
+        p.rename_to(pdead)
+
+
 def main():
     if (hf_key := 'HF_HUB_ENABLE_HF_TRANSFER') in os.environ:
         del os.environ[hf_key]
@@ -66,9 +80,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', '-d', type=Path,
                         help='Directory for source files')
-    parser.add_argument('--keep', '-k', action='store_true',
-                        help='Do not delete files.')
-    parser.add_argument
+    parser.add_argument('--remove', '-r', action='store_true',
+                        help='Remove files after successful upload')
+    parser.add_argument('--prune', '-p', action='store_true',
+                        help='Prune files which already exist on server')
     args = parser.parse_args()
 
     if args.dir:
@@ -86,15 +101,9 @@ def main():
             gguf_split(f)
         else:
             try:
-                if hfapi.file_exists(repo_id, f.name):
-                    if args.keep:
-                        print(f'Renaming {f.name}')
-                        f.rename(f.with_suffix('.dead'))
-                    else:
-                        print(f'Removing {f.name}')
-                        f.unlink()
-                else:
+                if not hfapi.file_exists(repo_id, f.name) or not args.prune:
                     upload_file(f, repo_id)
+                remove_file(f, args.remove) 
             except KeyboardInterrupt:
                 print('\n*** Keyboard interrupt ***')
                 break
