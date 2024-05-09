@@ -87,11 +87,9 @@ def get_file_info(repo_id : str, f : Path) -> RepoFile:
 def file_is_newer(repo_id : str, f : Path):
     if rf := get_file_info(repo_id, f):
         lf = f.stat()
-        if not lf.st_size == rf.size:
-            return True
-        if lf.st_mtime > rf.last_commit.date.timestamp():
-            return True
-    return False
+        if lf.st_size == rf.size and lf.st_mtime < rf.last_commit.date.timestamp():
+            return False
+    return True
 
 def main():
     if (hf_key := 'HF_HUB_ENABLE_HF_TRANSFER') in os.environ:
