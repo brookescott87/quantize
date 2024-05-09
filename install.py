@@ -4,26 +4,7 @@ import os
 from pathlib import Path
 import datetime
 import argparse
-
-class iobuffer(object):
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.buffer = bytearray(capacity)
-        self.length = 0
-
-    @property
-    def bytes(self):
-        if self.length < self.capacity:
-            return self.buffer[0:self.length]
-        else:
-            return self.buffer
-
-    def readfrom(self, f):
-        self.length = f.readinto(self.buffer)
-        return self.length
-    
-    def writeto(self, f):
-        return f.write(self.bytes) if self.length else 0
+import iobuffer
 
 class statusline(object):
     def __init__(self, stream=sys.stdout):
@@ -60,7 +41,7 @@ def copy_file(srcpath: Path, destpath: Path):
 
     with open(destpath, 'wb', buffering=0) as destfile:
         with open(srcpath, 'rb', buffering=0) as srcfile:
-            buffer = iobuffer(1024*1024)
+            buffer = iobuffer.iobuffer(1024*1024)
             statln = statusline()
             copied = 0
             start_time = datetime.datetime.now()
