@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import os
 import re
-from datetime import datetime as dt
+from datetime import datetime as dt, UTC
 from tzlocal import get_localzone
 from pathlib import Path
 import subprocess
 import clear_screen
 import huggingface_hub
+from huggingface_hub.hf_api import RepoFile
 import argparse
 
 MAX_UPLOAD_SIZE = 50_000_000_000
@@ -42,7 +43,7 @@ def gguf_split(p: Path):
         raise RuntimeError(f'gguf-split returned {result.returncode}')
     remove_file(p)
 
-def upload_file(p: Path, repo_id: str, new_name:str = None) -> bool:
+def upload_file(repo_id: str, p: Path, new_name:str = None) -> bool:
     name = new_name or p.name
     print(f'{timestamp()} ### Uploading {p.name} to {repo_id}/{name}')
     try:
@@ -64,14 +65,33 @@ def remove_file(p:Path, destroy:bool=False):
         print(f'Removing {p.name}')
         p.unlink()
     else:
-        pdead = p.with_suffix('.dead')
+        dname = p.name + '.dead'
+        pdead = p.with_name(dname)
         num = 0
         while pdead.exists():
             num += 1
-            pdead = p.with_suffix(f'.dead{num}')
+            pdead = p.with_name(dname + str(num))
         print(f'Renaming {p.name} to {pdead.name}')
-        p.rename_to(pdead)
+        p.rename(pdead)
 
+def get_path_info(repo_id : str, path : str) -> RepoFile:
+    result = hfapi.get_paths_info(repo_id, path, expand=True)
+    for rf in result:
+        if rf.path == path:
+            return rf
+    return None
+
+def get_file_info(repo_id : str, f : Path) -> RepoFile:
+    return get_path_info(repo_id, f.name)
+
+def file_is_newer(repo_id : str, f : Path):
+    if rf := get_file_info(repo_id, f):
+        lf = f.stat()
+        if not lf.st_size == rf.size:
+            return True
+        if dt.fromtimestamp(lf.st_mtime, tz = UTC) > lf.last_commit.date:
+            return True
+    return False
 
 def main():
     if (hf_key := 'HF_HUB_ENABLE_HF_TRANSFER') in os.environ:
@@ -82,8 +102,6 @@ def main():
                         help='Directory for source files')
     parser.add_argument('--remove', '-r', action='store_true',
                         help='Remove files after successful upload')
-    parser.add_argument('--prune', '-p', action='store_true',
-                        help='Prune files which already exist on server')
     args = parser.parse_args()
 
     if args.dir:
@@ -99,15 +117,14 @@ def main():
     while f := next_file(cwd):
         if f.stat().st_size > MAX_UPLOAD_SIZE:
             gguf_split(f)
+        elif file_is_newer(repo_id, f):
+            upload_file(repo_id, f)
         else:
-            try:
-                if not hfapi.file_exists(repo_id, f.name) or not args.prune:
-                    upload_file(f, repo_id)
-                remove_file(f, args.remove) 
-            except KeyboardInterrupt:
-                print('\n*** Keyboard interrupt ***')
-                break
-        print()
+            remove_file(f, args.remove)
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\n*** Keyboard interrupt ***')
+    print()
