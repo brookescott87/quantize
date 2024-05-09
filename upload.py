@@ -48,12 +48,12 @@ def upload_file(p: Path, repo_id: str, new_name:str = None) -> bool:
     try:
         v = hfapi.upload_file(path_or_fileobj=p, repo_id=repo_id, path_in_repo=name,
                               commit_message=f'Upload {name}')
-        print_object(f.with_suffix('.log'), v)
+        print_object(p.with_suffix('.log'), v)
     except KeyboardInterrupt as k:
         raise(k)
     except Exception as e:
-        print_object(f.with_suffix('.err'), e)
-        print(f'\n{f.name} failed due to {type(e).__name__}')
+        print_object(p.with_suffix('.err'), e)
+        print(f'\n{p.name} failed due to {type(e).__name__}')
     else:
         print(f'{timestamp()} {p.name} succeeded')
         return True
