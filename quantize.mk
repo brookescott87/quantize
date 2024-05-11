@@ -61,7 +61,7 @@ xconvert = python $(TOASTER_BIN)/$1 --outtype $3 --outfile $4.tmp $(convert_opts
 ifdef old_convert
 convert_py := convert.py --pad-vocab
 else
-convert_py := convert-hf-to-gguf.py
+convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--fallback-pre=$(PRETOKENIZER))
 endif
 
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
