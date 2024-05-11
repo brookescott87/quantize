@@ -22,22 +22,34 @@ QTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M Q2_K_S Q2_K
 QTYPES += IQ3_XXS IQ3_XS Q3_K_S IQ3_S IQ3_M Q3_K_M Q3_K_L IQ4_XS
 QTYPES += Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 
+QSUFFIXES := $(addsuffix .gguf,$(QTYPES))
+
 listqtypes::
 	@echo $(QTYPES)
 
+xcombine = $(foreach a,$1,$(foreach b,$2,$a$b))
+
 qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
-qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$(OUTPUT_ROOT)/$m-GGUF/$m.$q.gguf)))
 
 ifndef MODELS
 MODELS := $(notdir $(wildcard $(MODELBASE)/*))
 endif
 
-OUTPUTDIRS := $(if $(OUTPUT_ROOT),$(patsubst %,$(OUTPUT_ROOT)/%-GGUF,$(MODELS)))
+ifdef OUTPUT_ROOT
+OUTPUTDIRS := $(patsubst %,$(OUTPUT_ROOT)/%-GGUF,$(MODELS))
+MODELSTEMS := $(foreach m,$(MODELS),$(OUTPUT_ROOT)/$m-GGUF/$m.)
+else
+OUTPUTDIRS :=
+MODELSTEMS := $(patsubst %,%.,$(MODELS))
+endif
+OUTPUTQUANTS := $(call xcombine,$(MODELSTEMS),$(QSUFFIXES))
+
+listquants::
+	@for q in $(OUTPUTQUANTS); do echo $$q; done
 
 listmodels::
 	@echo "Models: $(MODELS)"
-
-qfiles = $(call qfile,$(MODELS),$1)
+	@echo "Stems: $(MODELSTEMS)"
 
 xinstall = mkdir -p $3 && $1 $2 $3
 
@@ -54,7 +66,7 @@ xquantize = \
 
 # quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
-	$(call xquantize,$3,$(call qtype,$3),$(filter %.gguf,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
+	$(call xquantize,$3,$(call qtype,$3),$(filter %.bin,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
 
 xconvert = python $(TOASTER_BIN)/$1 --outtype $3 --outfile $4.tmp $(convert_opts) $2 && mv $4.tmp $4 
 
@@ -66,7 +78,6 @@ endif
 
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(patsubst ./%,%,$(SRCDIR)/imatrix.dataset.txt)
-imatrix_model := python $(SRCDIR)/imatrix_model.py
 imatrix := $(TOASTER_BIN)/imatrix -f $(imatrix_data) $(IMATRIX_OPTS)
 mkreadme := python $(SRCDIR)/mkreadme.py
 
@@ -74,76 +85,69 @@ ifdef ABORT
 $(error Aborted)
 endif
 
-f32:: $(call qfiles,F32)
-f16:: $(call qfiles,F16)
-q8:: $(call qfiles,Q8_0)
-imat:: $(call qfiles,imatrix)
+bin:: $(addsuffix bin,$(MODELSTEMS))
+q8:: $(addsuffix Q8_0.gguf,$(MODELSTEMS))
+imat:: $(addsuffix imatrix,$(MODELSTEMS))
 
-quants:: f16 imat
-quants:: $(call qfiles,$(QTYPES))
+quants:: bin imat
+quants:: $(call xcombine,$(MODELSTEMS),$(QSUFFIXES))
 all:: quants
 
 $(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
 	mkdir -p $@
 	$(mkreadme) -o $@ -f $| 
 
-%.F32.gguf:| $(OUTPUTDIRS)
-	$(call convert,$(MODELBASE)/$(notdir $*),f32,$@)
+%.bin: | $(OUTPUTDIRS)
+	$(call convert,$(MODELBASE)/$(notdir $*),auto,$@)
 
-%.F16.gguf:| $(OUTPUTDIRS)
-	$(call convert,$(MODELBASE)/$(notdir $*),f16,$@)
-
-ifdef LOWMEM
-%.imatrix:| %.F16.gguf %.Q8_0.gguf
-	$(imatrix) -o $@.tmp -m $(shell $(imatrix_model) $|) && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
-else
-%.imatrix:| %.F16.gguf
-	$(imatrix) -o $@.tmp -m $| && mv $@.tmp $@ && $(call install,$@,$*-GGUF,-k)
-endif
+%.imatrix:| %.bin
+	$(imatrix) -o $@.tmp -m $| && mv $@.tmp $@
 
 .DELETE_ON_ERROR:
 
-%.Q2_K.gguf:| %.F16.gguf %.imatrix
+%.Q2_K.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q3_K_S.gguf:| %.F16.gguf %.imatrix
+%.Q3_K_S.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q3_K_M.gguf:| %.F16.gguf %.imatrix
+%.Q3_K_M.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q3_K_L.gguf:| %.F16.gguf %.imatrix
+%.Q3_K_L.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q4_K_S.gguf:| %.F16.gguf %.imatrix
+%.Q4_K_S.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q4_K_M.gguf:| %.F16.gguf %.imatrix
+%.Q4_K_M.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q5_K_S.gguf:| %.F16.gguf %.imatrix
+%.Q5_K_S.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q5_K_M.gguf:| %.F16.gguf %.imatrix
+%.Q5_K_M.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q6_K.gguf:| %.F16.gguf %.imatrix
+%.Q6_K.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.Q8_0.gguf:| %.F16.gguf %.imatrix
-	$(call quantize,$*,$|,$@,-k)
-%.Q2_K_S.gguf:| %.F16.gguf %.imatrix
+%.Q8_0.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ2_XXS.gguf:| %.F16.gguf %.imatrix
+%.Q2_K_S.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ2_XS.gguf:| %.F16.gguf %.imatrix
+%.IQ2_XXS.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ3_XS.gguf:| %.F16.gguf %.imatrix
+%.IQ2_XS.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ3_XXS.gguf:| %.F16.gguf %.imatrix
+%.IQ3_XS.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ1_S.gguf:| %.F16.gguf %.imatrix
+%.IQ3_XXS.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-# %.IQ4_NL.gguf:| %.F16.gguf %.imatrix
+%.IQ1_S.gguf:| %.bin %.imatrix
+	$(call quantize,$*,$|,$@)
+%.IQ1_M.gguf:| %.bin %.imatrix
+	$(call quantize,$*,$|,$@)
+# %.IQ4_NL.gguf:| %.bin %.imatrix
 # 	$(call quantize,$*,$|,$@)
-%.IQ3_S.gguf:| %.F16.gguf %.imatrix
+%.IQ3_S.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ3_M.gguf:| %.F16.gguf %.imatrix
+%.IQ3_M.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ2_S.gguf:| %.F16.gguf %.imatrix
+%.IQ2_S.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ2_M.gguf:| %.F16.gguf %.imatrix
+%.IQ2_M.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
-%.IQ4_XS.gguf:| %.F16.gguf %.imatrix
+%.IQ4_XS.gguf:| %.bin %.imatrix
 	$(call quantize,$*,$|,$@)
