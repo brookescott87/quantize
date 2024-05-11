@@ -18,14 +18,12 @@ endif
 
 export OUTPUT_ROOT := output/$(HF_ORGANIZATION)
 
-IQTYPES := IQ1_S IQ2_XXS IQ2_XS IQ2_S IQ2_M Q2_K_S Q2_K
-IQTYPES += IQ3_XXS IQ3_XS Q3_K_S IQ3_S IQ3_M Q3_K_M Q3_K_L IQ4_XS
-KQTYPES := Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
-
-QTYPES := $(KQTYPES) $(IQTYPES)
+QTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M Q2_K_S Q2_K
+QTYPES += IQ3_XXS IQ3_XS Q3_K_S IQ3_S IQ3_M Q3_K_M Q3_K_L IQ4_XS
+QTYPES += Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 
 listqtypes::
-	@echo "Quant types: $(QTYPES)"
+	@echo $(QTYPES)
 
 qtype = $(subst .,,$(suffix $(patsubst %.gguf,%,$1)))
 qfile = $(patsubst %.imatrix.gguf,%.imatrix,$(foreach m,$1,$(foreach q,$2,$(OUTPUT_ROOT)/$m-GGUF/$m.$q.gguf)))
@@ -52,7 +50,7 @@ endif
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
-	$(TOASTER_BIN)/quantize $(and $(filter $2,$(IQTYPES)),$4,--imatrix $4) $3 $1 $2
+	$(TOASTER_BIN)/quantize --imatrix $4 $3 $1 $2
 
 # quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
@@ -81,13 +79,9 @@ f16:: $(call qfiles,F16)
 q8:: $(call qfiles,Q8_0)
 imat:: $(call qfiles,imatrix)
 
-kquants iquants:: f16 q8
-iquants:: imat
-quants:: kquants iquants
+quants:: f16 imat
+quants:: $(call qfiles,$(QTYPES))
 all:: quants
-
-kquants:: $(call qfiles,$(KQTYPES))
-iquants:: $(call qfiles,$(IQTYPES))
 
 $(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
 	mkdir -p $@
