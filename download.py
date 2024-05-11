@@ -34,7 +34,7 @@ def main():
     if not args.destdir.is_dir():
         if args.destdir.exists():
             raise ValueError('%s is not a directory'%(args.destdir,))
-        args.destdir.mkdir()
+        args.destdir.mkdir(parents=True)
     model_path = args.destdir / model
 
     cache_path = Path(hfapi.snapshot_download(repo_id=args.repo_id))
