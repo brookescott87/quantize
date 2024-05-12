@@ -55,7 +55,7 @@ def main():
     args = parser.parse_args()
 
     if args.file:
-        repo = get_model_id(model_id := Path(args.model_id))
+        args.model_id = repo = get_model_id(model_id := Path(args.model_id))
     else:
         repo = model_id = RepoPath(args.model_id)
     quant_name = model_id.name + '-GGUF'
