@@ -68,12 +68,14 @@ xquantize = \
 quantize = \
 	$(call xquantize,$3,$(call qtype,$3),$(filter %.bin,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
 
-xconvert = python $(TOASTER_BIN)/$1 --outtype $3 --outfile $4.tmp $(convert_opts) $2 && mv $4.tmp $4 
+xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,$(defftype)) --outfile=$4 $(convert_opts) $2
 
 ifdef old_convert
 convert_py := convert.py --pad-vocab
+defftype := fp16
 else
 convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--fallback-pre=$(PRETOKENIZER))
+defftype := auto
 endif
 
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
@@ -98,7 +100,7 @@ $(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
 	$(mkreadme) -o $@ -f $| 
 
 %.bin: | $(OUTPUTDIRS)
-	$(call convert,$(MODELBASE)/$(notdir $*),auto,$@)
+	$(call convert,$(MODELBASE)/$(notdir $*),$(FTYPE),$@)
 
 %.imatrix:| %.bin
 	$(imatrix) -o $@.tmp -m $| && mv $@.tmp $@
