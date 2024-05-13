@@ -2,7 +2,9 @@
 
 import os
 from pathlib import Path
+from datetime import datetime as dt
 import subprocess
+import clear_screen
 import huggingface_hub
 import argparse
 
@@ -66,17 +68,23 @@ def main():
     if not args.no_upload:
         print(f'Uploading {repo_id}')
 
+        running = True
         retries = 0
+        start_time = dt.now()
 
-        while retries <= args.retries:
+        while running and retries <= args.retries:
             try:
                 hfapi.upload_folder(repo_id=repo_id, folder_path=qdir, commit_message=f'Upload {repo}.',
                                     repo_type='model', allow_patterns=upload_patterns)
+                running = False
             except RuntimeError:
                 retries += 1
                 print(f'Upload failed (retries = {retries})')
-            else:
-                break
+
+        elapsed = dt.now() - start_time
+        result = 'failed' if running else 'succeeded'
+        clear_screen.clear()
+        print(f"# Upload {result} after {elapsed} and {retries} retr{'y' if retries == 1 else 'ies'}.")
 
 if __name__ == '__main__':
     main()
