@@ -23,7 +23,7 @@ def main():
 
     if not '/' in args.repo_id:
         raise ValueError('repo_id must be of the form owner/model')
-    owner, model = args.repo_id.split('/')
+    _, model = args.repo_id.split('/')
 
     if args.no_symlink:
         if args.destdir:
