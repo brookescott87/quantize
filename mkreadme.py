@@ -52,6 +52,8 @@ def main():
                         help='Model creation date')
     parser.add_argument('--description', '--desc', '-s', type=str, default='(Add description here)',
                         help='Model description')
+    parser.add_argument('--standalone', '-S', action='store_true',
+                        help='Not a HuggingFace model')
     args = parser.parse_args()
 
     if args.file:
@@ -75,17 +77,24 @@ def main():
         if args.output.exists() and not args.update:
             sys.exit()
 
-    model_info = hfapi.model_info(str(repo))
-    card_data = model_info.card_data
-    config = json.loads(hfs.cat_file(repo / 'config.json'))
+    if args.standalone:
+        card_data = huggingface_hub.repocard_data.ModelCardData(model_name = repo.name)
+        model_info = huggingface_hub.hf_api.ModelInfo(
+            id = str(repo), private = True, downloads = 0, likes = 0, tags = [], author=repo.parent, card_data = card_data,
+            created_at = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+        config = {}
+    else:
+        model_info = hfapi.model_info(str(repo))
+        card_data = model_info.card_data
+        config = json.loads(hfs.cat_file(repo / 'config.json'))
 
-    if not card_data.model_name == repo.name:
-        if card_data.model_name:
-            sys.stderr.write(f'Warning: card_data says model name is {card_data.model_name}\n')
-            sys.stderr.write(f'but model_id is {str(repo)}\n')
-            raise ValueError('Model name mismatch')
-        else:
-            sys.stderr.write("Warning: model name not set in base model's metadata\n")
+        if not card_data.model_name == repo.name:
+            if card_data.model_name:
+                sys.stderr.write(f'Warning: card_data says model name is {card_data.model_name}\n')
+                sys.stderr.write(f'but model_id is {str(repo)}\n')
+                raise ValueError('Model name mismatch')
+            else:
+                sys.stderr.write("Warning: model name not set in base model's metadata\n")
 
     if not args.author:
         args.author = model_info.author
