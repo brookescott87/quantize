@@ -80,7 +80,7 @@ endif
 
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(patsubst ./%,%,$(SRCDIR)/imatrix.dataset.txt)
-imatrix := $(TOASTER_BIN)/imatrix -f $(imatrix_data) $(IMATRIX_OPTS)
+imatrix := $(TOASTER_BIN)/imatrix -c 128 -f $(imatrix_data) $(IMATRIX_OPTS)
 mkreadme := python $(SRCDIR)/mkreadme.py
 
 ifdef ABORT
