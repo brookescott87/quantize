@@ -114,8 +114,8 @@ def main():
             context = 4096
         args.context = context
 
-    if args.context % 2048:
-        raise ValueError('strange context %d'%(args.context,))
+#    if args.context % 2048:
+#        raise ValueError('strange context %d'%(args.context,))
 
     card_data.base_model = str(repo)
     card_data.model_name = quant_name
