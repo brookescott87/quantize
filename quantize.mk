@@ -87,17 +87,21 @@ ifdef ABORT
 $(error Aborted)
 endif
 
+readme:: $(addsufix /README.md,$(OUTPUTDIRS))
 bin:: $(addsuffix bin,$(MODELSTEMS))
 q8:: $(addsuffix Q8_0.gguf,$(MODELSTEMS))
 imat:: $(addsuffix imatrix,$(MODELSTEMS))
 
-quants:: bin imat
+quants:: readme bin imat
 quants:: $(call xcombine,$(MODELSTEMS),$(QSUFFIXES))
 all:: quants
 
 $(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
 	mkdir -p $@
-	$(mkreadme) -o $@ -f $| 
+
+$(OUTPUT_ROOT)/%-GGUF/README.md: | $(MODELBASE)/%
+	mkdir -p $(@D)
+	$(mkreadme) -o $@ -f $|
 
 %.bin: | $(OUTPUTDIRS)
 	$(call convert,$(MODELBASE)/$(notdir $*),$(FTYPE),$@)
