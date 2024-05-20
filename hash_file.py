@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import hashlib
-import qlib.iobuffer as iobuffer
+from qlib import IOBuffer
 import argparse
 
 MAX_BLOB_SIZE = 1_000_000
@@ -15,7 +15,7 @@ def hash_file(p: Path) -> str:
             else:
                 h = hashlib.sha1(usedforsecurity=False)
                 h.update(b'blob %d\0'%(fsize,))
-                buffer = iobuffer.IOBuffer(MAX_BLOB_SIZE)
+                buffer = IOBuffer(MAX_BLOB_SIZE)
                 while buffer.readfrom(srcfile):
                     h.update(buffer.bytes)
 
