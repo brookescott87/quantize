@@ -74,7 +74,7 @@ def main():
     if not args.no_upload:
         uploader = qlib.Uploader(repo_id, qdir, args.retries)
 
-        if (success := uploader.upload(f'Upload {repo}', allow_patterns, ignore_patterns, args.only_shards)):
+        if (success := uploader.upload(f'Upload {repo}', allow_patterns, ignore_patterns, skip=args.only_shards)):
             if not args.no_ggufs:
                 if any(qdir.glob(shard_pattern)):
                     success = uploader.upload('Upload shards', [shard_pattern], [])

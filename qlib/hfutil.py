@@ -20,7 +20,7 @@ class Uploader(object):
     def elapsed(self):
         return datetime.datetime.now() - self.start_time if self.start_time else datetime.timedelta(0)
         
-    def upload(self, message: str, allow_patterns:List[str], ignore_patterns:List[str], skip=False):
+    def upload(self, message: str, allow_patterns:List[str], ignore_patterns:List[str], *, skip=False):
         if skip:
             return True
         retries = 0
