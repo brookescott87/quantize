@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import datetime
 import argparse
-import iobuffer
+import qlib.iobuffer as iobuffer
 
 class statusline(object):
     def __init__(self, stream=sys.stdout):

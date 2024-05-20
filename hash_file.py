@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import hashlib
-import iobuffer
+import qlib.iobuffer as iobuffer
 import argparse
 
 MAX_BLOB_SIZE = 1_000_000
