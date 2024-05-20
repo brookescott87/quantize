@@ -41,7 +41,7 @@ def copy_file(srcpath: Path, destpath: Path):
 
     with open(destpath, 'wb', buffering=0) as destfile:
         with open(srcpath, 'rb', buffering=0) as srcfile:
-            buffer = iobuffer.iobuffer(1024*1024)
+            buffer = iobuffer.IOBuffer(1024*1024)
             statln = statusline()
             copied = 0
             start_time = datetime.datetime.now()

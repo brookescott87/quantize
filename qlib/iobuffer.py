@@ -1,4 +1,4 @@
-class iobuffer(object):
+class IOBuffer(object):
     def __init__(self, capacity):
         self.capacity = capacity
         self.buffer = bytearray(capacity)

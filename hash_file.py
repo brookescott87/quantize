@@ -15,7 +15,7 @@ def hash_file(p: Path) -> str:
             else:
                 h = hashlib.sha1(usedforsecurity=False)
                 h.update(b'blob %d\0'%(fsize,))
-                buffer = iobuffer.iobuffer(MAX_BLOB_SIZE)
+                buffer = iobuffer.IOBuffer(MAX_BLOB_SIZE)
                 while buffer.readfrom(srcfile):
                     h.update(buffer.bytes)
 
