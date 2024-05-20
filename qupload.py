@@ -1,64 +1,18 @@
 #!/usr/bin/env python
 
-import sys
 import os
 import re
 from pathlib import Path
-from datetime import datetime as dt
-from typing import Iterator,List
+from typing import Iterator
 import subprocess
 import clear_screen
-import huggingface_hub
 import argparse
+import qlib
 
 MAX_UPLOAD_SIZE = 50_000_000_000
 TOASTER = Path(os.environ['TOASTER_ROOT'])
 gguf_split_exe = TOASTER/'bin'/'gguf-split'
 shard_rx = re.compile('.*-split-\d{5}-of-\d{5}$')
-
-hfapi = huggingface_hub.HfApi()
-
-class Uploader(object):
-    def __init__(self, repo_id: str, folder_path: Path, max_retries:int = 0):
-        self.repo_id = repo_id
-        self.folder_path = folder_path
-        self.max_retries = max_retries
-        self.total_retries = 0
-        self.start_time = dt.now()
-
-    @property
-    def elapsed(self):
-        return dt.now() - self.start_time
-        
-    def upload(self, message: str, allow_patterns:List[str], ignore_patterns:List[str], skip=False):
-        if skip:
-            return True
-        retries = 0
-        finished = False
-
-        while not (finished or (self.max_retries and retries > self.max_retries)):
-            clear_screen.clear()
-            sys.stdout.write(message)
-
-            if retries:
-                sys.stdout.write(f' (retry {retries}')
-                if self.max_retries:
-                    sys.stdout.write(f' of {self.max_retries}')
-                    sys.stdout.write(')')
-            sys.stdout.write('\n')
-            try:
-                hfapi.upload_folder(repo_id=self.repo_id, folder_path=self.folder_path, commit_message=message,
-                                    repo_type='model', allow_patterns=allow_patterns, ignore_patterns=ignore_patterns)
-                finished = True
-            except KeyboardInterrupt:
-                print('\n*** Keyboard interrupt ***')
-                break
-            except RuntimeError:
-                retries += 1
-                print('Upload failed')
-
-        self.total_retries += retries
-        return finished
 
 def oversize_ggufs(d: Path) -> Iterator[Path]:
     return (f for f in d.iterdir() if f.suffix == '.gguf' and f.stat().st_size > MAX_UPLOAD_SIZE)
@@ -117,15 +71,8 @@ def main():
     owner = qdir.parent.name
     repo_id = f'{owner}/{repo}'
 
-    if not hfapi.repo_exists(repo_id):
-        if args.initialize:
-            print(f'Initializing repository {repo_id}')
-            hfapi.create_repo(repo_id, private = True, repo_type = 'model')
-        else:
-            raise ValueError(f'Repository {repo_id} does not exist and --initialize not given')
-
     if not args.no_upload:
-        uploader = Uploader(repo_id, qdir, args.retries)
+        uploader = qlib.Uploader(repo_id, qdir, args.retries)
 
         if (success := uploader.upload(f'Upload {repo}', allow_patterns, ignore_patterns, args.only_shards)):
             if not args.no_ggufs:
