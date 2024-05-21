@@ -1,7 +1,7 @@
 ---
 ${metadata}
 ---
-<img src="Faraday Model Repository Banner.png" alt="Faraday.dev" style="height: 90px; min-width: 32px; display: block; margin: auto;">
+<img src="Faraday_Banner.png" alt="Faraday.dev" style="height: 90px; min-width: 32px; display: block; margin: auto;">
 
 **<p style="text-align: center;">The official library of GGUF format models for use in the local AI chat app, Faraday.dev.</p>**
 
@@ -22,7 +22,7 @@ GGUF is a large language model (LLM) format that can be split between CPU and GP
 GGUF models are quantized to reduce resource usage, with a tradeoff of reduced coherence at lower quantizations. Quantization reduces the precision of the model weights by changing the number of bits used for each weight.
 
 ***
-<img src="faraday-logo.png" alt="Faraday.dev" style="height: 75px; min-width: 32px; display: block; horizontal align: left;">
+<img src="Faraday_Logo.png" alt="Faraday.dev" style="height: 75px; min-width: 32px; display: block; horizontal align: left;">
 
 ## Faraday.dev
 - Free, local AI chat application.
