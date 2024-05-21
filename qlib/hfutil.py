@@ -33,7 +33,7 @@ class Uploader(object):
 
         while not (finished or (self.max_retries and retries > self.max_retries)):
             clear_screen.clear()
-            sys.stdout.write(message)
+            sys.stdout.write(f'{self.repo_id}: {message}')
 
             if retries:
                 sys.stdout.write(f' (retry {retries}')
