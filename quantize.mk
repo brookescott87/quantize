@@ -99,12 +99,11 @@ quants:: readme bin imat
 quants:: $(call xcombine,$(MODELSTEMS),$(QSUFFIXES))
 all:: quants
 
-$(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF: | $(MODELBASE)/%
-	mkdir -p $@
+$(OUTPUTDIRS): $(OUTPUT_ROOT)/%-GGUF:
+	mkdir -p $@ && cp $(wildcard $(ASSETS)/*.png) $@ 
 
-$(OUTPUT_ROOT)/%-GGUF/README.md: | $(MODELBASE)/%
-	mkdir -p $(@D)
-	$(mkreadme) -o $@ -f $|
+$(OUTPUT_ROOT)/%-GGUF/README.md: | $(MODELBASE)/% $(OUTPUT_ROOT)/%-GGUF
+	$(mkreadme) -o $@ -f $(MODELBASE)/$*
 
 %.bin: | $(OUTPUTDIRS)
 	$(call convert,$(MODELBASE)/$(notdir $*),$(FTYPE),$@)
