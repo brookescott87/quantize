@@ -1,4 +1,7 @@
 SRCDIR := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+SCRIPTDIR := $(SRCDIR)
+DATADIR := $(SRCDIR)/data
+ASSETS := $(SRCDIR)/assets
 MODELBASE := $(SRCDIR)/models/base
 
 ifndef TOASTER_ROOT
