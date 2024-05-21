@@ -58,7 +58,7 @@ xinstall = mkdir -p $3 && $1 $2 $3
 
 ifdef INSTALL_DIR
 VPATH := $(patsubst %,$(INSTALL_DIR)/%-GGUF,$(MODELS))
-install = python $(SRCDIR)/install.py $3 $1 $(INSTALL_DIR)/$2
+install = python $(SCRIPTDIR)/install.py $3 $1 $(INSTALL_DIR)/$2
 else
 install = true
 endif
@@ -84,7 +84,7 @@ endif
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(patsubst ./%,%,$(SRCDIR)/imatrix.dataset.txt)
 imatrix := $(TOASTER_BIN)/imatrix --chunks 128 -c 128 -f $(imatrix_data) $(IMATRIX_OPTS)
-mkreadme := python $(SRCDIR)/mkreadme.py
+mkreadme := python $(SCRIPTDIR)/mkreadme.py
 
 ifdef ABORT
 $(error Aborted)
