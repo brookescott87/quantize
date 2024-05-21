@@ -82,8 +82,8 @@ defftype := auto
 endif
 
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
-imatrix_data := $(patsubst ./%,%,$(SRCDIR)/imatrix.dataset.txt)
-imatrix := $(TOASTER_BIN)/imatrix --chunks 128 -c 128 -f $(imatrix_data) $(IMATRIX_OPTS)
+imatrix_data := $(DATADIR)/20k_random_data.txt
+imatrix = $(TOASTER_BIN)/imatrix --chunks 128 -c 128 -m $(filter %.bin,$1) -f $(filter %.txt,$1) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 
 ifdef ABORT
@@ -109,8 +109,11 @@ $(OUTPUT_ROOT)/%-GGUF/README.md: | $(MODELBASE)/%
 %.bin: | $(OUTPUTDIRS)
 	$(call convert,$(MODELBASE)/$(notdir $*),$(FTYPE),$@)
 
-%.imatrix:| %.bin
-	$(imatrix) -o $@.tmp -m $| && mv $@.tmp $@
+%.imatrix:| %.bin imatrix_dataset.txt
+	$(call imatrix,$|,$@)
+
+imatrix_dataset.txt:
+	cp $(imatrix_data) $@
 
 .DELETE_ON_ERROR:
 
