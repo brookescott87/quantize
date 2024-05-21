@@ -87,7 +87,7 @@ ifdef ABORT
 $(error Aborted)
 endif
 
-readme:: $(addsufix /README.md,$(OUTPUTDIRS))
+readme:: $(addsuffix /README.md,$(OUTPUTDIRS))
 bin:: $(addsuffix bin,$(MODELSTEMS))
 q8:: $(addsuffix Q8_0.gguf,$(MODELSTEMS))
 imat:: $(addsuffix imatrix,$(MODELSTEMS))
