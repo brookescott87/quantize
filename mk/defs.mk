@@ -17,7 +17,7 @@ AUTHOR := $(firstword $(subst /, ,$(BASEREPO)))
 endif
 
 ifndef BASEMODEL
-BASEMODEL := $(source)/$(notdir $(BASEREPO))
+BASEMODEL := $(notdir $(BASEREPO))
 endif
 
 ifndef QUANTMODEL
@@ -62,7 +62,7 @@ quants:: assets bin imat
 quants:: $(QUANTS)
 assets:: $(ASSETS) README.md
 
-$(QUANTMODEL).bin: | $(BASEMODEL)
+$(QUANTMODEL).bin: | $(source)/$(BASEMODEL)
 	$(call convert,$|,$(FTYPE),$@)
 
 $(QUANTS): $(QUANTMODEL).%.gguf:| $(QUANTMODEL).bin $(QUANTMODEL).imatrix
@@ -80,7 +80,7 @@ $(ASSETS): %.png: | $(ASSETDIR)/%.png
 README.md:
 	$(mkreadme) -o $@ $(BASEREPO)
 
-$(BASEMODEL):
+$(source)/$(BASEMODEL):
 	mkdir -p $(@D)
 	python $(SCRIPTDIR)/download_model.py $(BASEREPO) $@
 
