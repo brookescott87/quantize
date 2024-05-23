@@ -1,4 +1,4 @@
-source := basemodel
+source := ./basemodel
 
 parent = $(patsubst %/,%,$(dir $1))
 
