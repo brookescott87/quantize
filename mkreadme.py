@@ -11,8 +11,8 @@ import argparse
 script_dir = Path(__file__).parent
 assets_dir = script_dir / 'assets'
 
-image_files = (assets_dir / 'Faraday Model Repository Banner.png',
-               assets_dir / 'faraday-logo.png')
+image_files = (assets_dir / 'BackyardAI_Banner.png',
+               assets_dir / 'BackyardAI_Logo.png')
 
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()

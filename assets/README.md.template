@@ -1,11 +1,11 @@
 ---
 ${metadata}
 ---
-<img src="Faraday_Banner.png" alt="Faraday.dev" style="height: 90px; min-width: 32px; display: block; margin: auto;">
+<img src="BackyardAI_Banner.png" alt="Backyard.ai" style="height: 90px; min-width: 32px; display: block; margin: auto;">
 
-**<p style="text-align: center;">The official library of GGUF format models for use in the local AI chat app, Faraday.dev.</p>**
+**<p style="text-align: center;">The official library of GGUF format models for use in the local AI chat app, Backyard AI.</p>**
 
-<p style="text-align: center;"><a href="https://faraday.dev/">Download Faraday here to get started.</a></p>
+<p style="text-align: center;"><a href="https://backyard.ai/">Download Backyard AI here to get started.</a></p>
 
 <p style="text-align: center;"><a href="https://www.reddit.com/r/LLM_Quants/">Request Additional models at r/LLM_Quants.</a></p>
 
@@ -16,21 +16,21 @@ ${metadata}
 - **Date Created:** ${date}
 - **Trained Context:** ${context} tokens
 - **Description:** ${description}
-
+***
 ## What is a GGUF?
-GGUF is a large language model (LLM) format that can be split between CPU and GPU. GGUFs are compatible with applications based on llama.cpp, such as Faraday.dev. Where other model formats require higher end GPUs with ample VRAM, GGUFs can be efficiently run on a wider variety of hardware.
+GGUF is a large language model (LLM) format that can be split between CPU and GPU. GGUFs are compatible with applications based on llama.cpp, such as Backyard AI. Where other model formats require higher end GPUs with ample VRAM, GGUFs can be efficiently run on a wider variety of hardware.
 GGUF models are quantized to reduce resource usage, with a tradeoff of reduced coherence at lower quantizations. Quantization reduces the precision of the model weights by changing the number of bits used for each weight.
 
 ***
-<img src="Faraday_Logo.png" alt="Faraday.dev" style="height: 75px; min-width: 32px; display: block; horizontal align: left;">
+<img src="BackyardAI_Logo.png" alt="Backyard.ai" style="height: 75px; min-width: 32px; display: block; horizontal align: left;">
 
-## Faraday.dev
+## Backyard AI
 - Free, local AI chat application.
 - One-click installation on Mac and PC.
 - Automatically use GPU for maximum speed.
 - Built-in model manager.
 - High-quality character hub.
 - Zero-config desktop-to-mobile tethering.
-Faraday makes it easy to start chatting with AI using your own characters or one of the many found in the built-in character hub. The model manager helps you find the latest and greatest models without worrying about whether it's the correct format. Faraday supports advanced features such as lorebooks, author's note, text formatting, custom context size, sampler settings, grammars, local TTS, cloud inference, and tethering, all implemented in a way that is straightforward and reliable.
+Backyard AI makes it easy to start chatting with AI using your own characters or one of the many found in the built-in character hub. The model manager helps you find the latest and greatest models without worrying about whether it's the correct format. Backyard AI supports advanced features such as lorebooks, author's note, text formatting, custom context size, sampler settings, grammars, local TTS, cloud inference, and tethering, all implemented in a way that is straightforward and reliable.
 **Join us on [Discord](https://discord.gg/SyNN2vC9tQ)**
 ***
