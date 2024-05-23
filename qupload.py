@@ -11,6 +11,7 @@ import qlib
 
 MAX_UPLOAD_SIZE = 50_000_000_000
 TOASTER = Path(os.environ['TOASTER_ROOT'])
+HF_DEFAULT_ORGANIZATION = os.getenv('HF_DEFAULT_ORGANIZATION')
 gguf_split_exe = TOASTER/'bin'/'gguf-split'
 shard_rx = re.compile('.*-split-\d{5}-of-\d{5}$')
 
@@ -38,6 +39,7 @@ def check_quant(qdir, keep_oversize=False):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', type=Path, help='Directory containing quant.')
+    parser.add_argument('--organization', '-o', type=str, default=HF_DEFAULT_ORGANIZATION, help='Organization to upload to')
     parser.add_argument('--initialize', '-i', action='store_true', help="Create new if doesn't exist") 
     parser.add_argument('--retries', '-r', type=int, default=0, help='Number of times to retry')
     parser.add_argument('--only_shards', '-S', action='store_true', help='Only shards')
@@ -67,8 +69,10 @@ def main():
         ignore_patterns.append(shard_pattern)
         check_quant(qdir, args.keep_oversize)
 
+    if not (owner := args.organization):
+        raise ValueError('either HF_DEFAULT_ORGANIZATION must be set or --organization must be given')
+
     repo = qdir.name
-    owner = qdir.parent.name
     repo_id = f'{owner}/{repo}'
 
     if not args.no_upload:
