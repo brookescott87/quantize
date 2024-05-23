@@ -16,7 +16,7 @@ ${metadata}
 - **Date Created:** ${date}
 - **Trained Context:** ${context} tokens
 - **Description:** ${description}
-
+***
 ## What is a GGUF?
 GGUF is a large language model (LLM) format that can be split between CPU and GPU. GGUFs are compatible with applications based on llama.cpp, such as Backyard AI. Where other model formats require higher end GPUs with ample VRAM, GGUFs can be efficiently run on a wider variety of hardware.
 GGUF models are quantized to reduce resource usage, with a tradeoff of reduced coherence at lower quantizations. Quantization reduces the precision of the model weights by changing the number of bits used for each weight.
