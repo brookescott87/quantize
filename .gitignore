@@ -1,5 +1,6 @@
 /models/
 /output/
+/build/
 /__pycache__/
 /site.mk
 *.gguf
