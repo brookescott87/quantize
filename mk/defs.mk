@@ -12,8 +12,17 @@ ifndef BASEREPO
 $(error BASEREPO is not set)
 endif
 
+ifndef AUTHOR
+AUTHOR := $(firstword $(subst /, ,$(BASEREPO)))
+endif
+
+ifndef BASEMODEL
 BASEMODEL := $(source)/$(notdir $(BASEREPO))
+endif
+
+ifndef QUANTMODEL
 QUANTMODEL := $(notdir $(abspath .))
+endif
 
 ifndef TOASTER_ROOT
 $(error TOASTER_ROOT is not set)
