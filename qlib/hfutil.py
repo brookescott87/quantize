@@ -110,6 +110,9 @@ class Model(ProxyObject):
     @cached_property
     def model_name(self): return self.repo_id.split('/')[-1]
 
+    @property
+    def repo_id(self): return self._repo_id
+
     def parse_param_size(self,joiner):
         if nexperts := self.num_experts:
             nexperts = f'{nexperts}x'
@@ -160,10 +163,6 @@ class Model(ProxyObject):
             return obj
         else:
             return None
-
-    @property
-    def repo_id(self):
-        return self._repo_id
 
     @staticmethod
     def calc_params(blocks, embeds, ffs, heads, kvs, vocabs):
