@@ -113,34 +113,6 @@ class Model(ProxyObject):
     @property
     def repo_id(self): return self._repo_id
 
-    def parse_param_size(self,joiner):
-        if nexperts := self.num_experts:
-            nexperts = f'{nexperts}x'
-        nparams = self.num_params / 1e9
-        bparams = round(nparams)
-        perr = nparams / 10
-        pstr = (nexperts or '') + str(bparams)
-        mstr = None
-        for p in (parts := self.model_name.split('-')):
-            if not p == mstr:
-                if m := paramsize_rx.match(p):
-                    if m.group(2) == nexperts:
-                        if nerr := abs(nparams - float(m.group(3))) < perr:
-                            perr = nerr
-                            pstr = m.group(1)
-                            mstr = p
-        if mstr:
-            parts = [p for p in parts if not p == mstr]
-        return (pstr,joiner.join(parts))
-
-    def catalog_name(self):
-        psize,name = self.parse_param_size('-')
-        return f'{self.model_type}.{psize}b.{name}'.lower()
-    
-    def formal_name(self):
-        psize,name = self.parse_param_size(' ')
-        return f'{name} {psize}B'
-
     def download(self):
         return Path(hfapi.snapshot_download(repo_id=self.repo_id))
 
@@ -213,6 +185,36 @@ class BaseModel(Model):
 
     @cached_property
     def num_experts(self): return self.config.get('num_local_experts')
+
+    def parse_param_size(self,joiner):
+        if nexperts := self.num_experts:
+            nexperts = f'{nexperts}x'
+        nparams = self.num_params / 1e9
+        bparams = round(nparams)
+        perr = nparams / 10
+        pstr = (nexperts or '') + str(bparams)
+        mstr = None
+        for p in (parts := self.model_name.split('-')):
+            if not p == mstr:
+                if m := paramsize_rx.match(p):
+                    if m.group(2) == nexperts:
+                        if nerr := abs(nparams - float(m.group(3))) < perr:
+                            perr = nerr
+                            pstr = m.group(1)
+                            mstr = p
+        if mstr:
+            parts = [p for p in parts if not p == mstr]
+        return (pstr,joiner.join(parts))
+
+    def catalog_name(self):
+        psize,name = self.parse_param_size('-')
+        return f'{self.model_type}.{psize}b.{name}'.lower()
+    
+    def formal_name(self):
+        psize,name = self.parse_param_size(' ')
+        return f'{name} {psize}B'
+
+
 
 class QuantModel(Model):
     class proxy_property:
