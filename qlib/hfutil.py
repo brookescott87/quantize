@@ -86,11 +86,6 @@ class Model:
                 return self.repo_id.split('/')[-1]
             case 'base_model':
                 return self.card_data and Model(self.card_data.base_model)
-            # case 'base_model':
-            #     bm = self.model_info.card_data.base_model
-            #     if bm == 'microsoft/WizardLM-2-8x22B':
-            #         bm = 'alpindale/WizardLM-2-8x22B'
-            #     return Model(bm)
             case 'config':
                 if self.repo_id.endswith('-GGUF') and self.base_model:
                     return self.base_model.config
