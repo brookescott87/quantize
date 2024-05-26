@@ -1,9 +1,12 @@
 import sys
+import os
 from pathlib import Path
 import datetime
 import clear_screen
 import huggingface_hub
 from typing import List
+
+organization = os.getenv('HF_DEFAULT_ORGANIZATION')
 
 hfapi = huggingface_hub.HfApi()
 
