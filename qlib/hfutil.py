@@ -2,6 +2,7 @@ import sys
 import os
 import re
 from pathlib import Path
+from functools import cached_property
 import datetime
 import json
 import clear_screen
@@ -66,25 +67,11 @@ class Uploader(object):
 def list_models():
     return [m.id for m in hfapi.list_models(author=organization) if not m.private]
 
-class Model:
-    cache = dict()
-    aliases = {
-        'microsoft/WizardLM-2-8x22B': 'alpindale/WizardLM-2-8x22B'
-    }
-
-    def xattr(self, name):
-        match(name):
-            case 'model_info':
-                return hfapi.model_info(self.repo_id, files_metadata=False)
-            case 'files':
-                return hfapi.model_info(self.repo_id, files_metadata=True).siblings
-            case 'card_data':
-                return self.model_info.card_data
-            case 'owner':
-                return self.repo_id.split('/')[0]
-            case 'model_name':
-                return self.repo_id.split('/')[-1]
-        return self.__getattribute__(name)
+class ProxyObject:
+    @classmethod
+    def __init_subclass__(cls):
+        if '__init_proxy__' in cls.__dict__:
+            cls.__init_proxy__()
 
     def refresh(self):
         for k in self.__dict__:
@@ -101,6 +88,27 @@ class Model:
         for k in names:
             if k in self.__dict__:
                 self.__dict__.pop(k, None)
+
+class Model(ProxyObject):
+    cache = dict()
+    aliases = {
+        'microsoft/WizardLM-2-8x22B': 'alpindale/WizardLM-2-8x22B'
+    }
+
+    @cached_property
+    def model_info(self): return hfapi.model_info(self.repo_id, files_metadata=False)
+    
+    @cached_property
+    def files(self): return hfapi.model_info(self.repo_id, files_metadata=True).siblings
+    
+    @cached_property
+    def card_data(self): return self.model_info.card_data
+    
+    @cached_property
+    def owner(self): return self.repo_id.split('/')[0]
+
+    @cached_property
+    def model_name(self): return self.repo_id.split('/')[-1]
 
     def parse_param_size(self,joiner):
         if nexperts := self.num_experts:
@@ -132,11 +140,6 @@ class Model:
 
     def download(self):
         return Path(hfapi.snapshot_download(repo_id=self.repo_id))
-
-    def __getattr__(self, name):
-        value = self.xattr(name)
-        setattr(self, name, value)
-        return value
 
     def __new__(cls, repo_id:str):
         if repo_id:
@@ -185,36 +188,50 @@ class Model:
         return Model.calc_params(blocks, embeds, ffs, heads, kvs, vocabs)
 
 class BaseModel(Model):
-    def xattr(self, name):
-        match name:
-            case 'config':
-                if hfs.isfile(path := self.repo_id + '/config.json'):
-                    return json.loads(hfs.read_text(path))
-                else:
-                    raise RuntimeError(f'Base model {self.model_name} lacks a config.json')
-            case 'num_params':
-                return self.config and Model.calc_params_from_config(self.config)
-            case 'context':
-                return self.config.get('max_position_embeddings')
-            case 'model_type':
-                if (mtype := self.config.get('model_type')) == 'llama':
-                    return 'llama3' if self.vocab_size > 100000 else 'llama2'
-                else:
-                    return mtype
-            case 'vocab_size':
-                return self.config.get('vocab_size')
-            case 'num_experts':
-                return self.config.get('num_local_experts')
-        return super().xattr(name)
+    @cached_property
+    def config(self):
+        if hfs.isfile(path := self.repo_id + '/config.json'):
+            return json.loads(hfs.read_text(path))
+        else:
+            raise RuntimeError(f'Base model {self.model_name} lacks a config.json')
+
+    @cached_property
+    def num_params(self):
+        return self.config and Model.calc_params_from_config(self.config)
+    
+    @cached_property
+    def context(self): return self.config.get('max_position_embeddings')
+
+    @cached_property
+    def model_type(self):
+        if (mtype := self.config.get('model_type')) == 'llama':
+            return 'llama3' if self.vocab_size > 100000 else 'llama2'
+        else:
+            return mtype
+        
+    @cached_property
+    def vocab_size(self): return self.config.get('vocab_size')
+
+    @cached_property
+    def num_experts(self): return self.config.get('num_local_experts')
 
 class QuantModel(Model):
-    def xattr(self, name):
-        match name:
-            case 'base_model':
-                return self.card_data and Model(self.card_data.base_model)
-            case 'config':
-                return self.base_model.config
-        return super().xattr(name)
+    class proxy_property:
+        def __init__(self, cp):
+            self.cp = cp
 
-    def parse_param_size(self,joiner):
-        return self.base_model.parse_param_size(joiner)
+        def __call__(self, qm):
+            return self.cp.func(qm.base_model)
+
+    @cached_property
+    def base_model(self):
+        return self.card_data and BaseModel(self.card_data.base_model)
+
+    @classmethod
+    def __init_proxy__(cls):
+        for attrname,bcp in BaseModel.__dict__.items():
+            if isinstance(bcp, cached_property):
+                p = cls.proxy_property(bcp)
+                qcp = cached_property(p)
+                qcp.attrname = attrname
+                setattr(cls, attrname, qcp)
