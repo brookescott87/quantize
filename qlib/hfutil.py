@@ -13,7 +13,7 @@ organization = os.getenv('HF_DEFAULT_ORGANIZATION')
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
 
-paramsize_rx = re.compile('(\d+x)?(\d{1,3}(\.\d)?)b$')
+paramsize_rx = re.compile('((\d+x)?(\d{1,3}(\.\d)?))[Bb]$')
 
 class Uploader(object):
     def __init__(self, repo_id: str, folder_path: Path, max_retries:int = 0):
@@ -94,7 +94,10 @@ class Model:
             case 'context':
                 return self.config.get('max_position_embeddings')
             case 'model_type':
-                return self.config.get('model_type')
+                if (mtype := self.config.get('model_type')) == 'llama':
+                    return 'llama3' if self.vocab_size > 100000 else 'llama2'
+                else:
+                    return mtype
             case 'vocab_size':
                 return self.config.get('vocab_size')
             case 'num_experts':
@@ -105,36 +108,29 @@ class Model:
         for k in [k for k in self.__dict__ if not k[0] == '_']:
             self.__dict__.pop(k, None)
 
-    def is_llama3(self):
-        try:
-            return self.model_type == 'llama' and self.vocab_size > 100000
-        except:
-            return None
-    
-    @staticmethod
-    def parse_param_size(parts, nparams, nexperts=None):
-        if nexperts:
+    def parse_param_size(self,joiner):
+        if nexperts := self.num_experts:
             nexperts = f'{nexperts}x'
-        nparams = nparams / 1e9
+        nparams = self.num_params / 1e9
         bparams = round(nparams)
         perr = nparams / 10
-        pstr = (nexperts or '') + str(bparams) + 'b'
-        for p in parts:
+        pstr = (nexperts or '') + str(bparams)
+        for p in (parts := self.model_name.split('-')):
             if m := paramsize_rx.match(p):
-                if not m.group(0) == pstr:
-                    if m.group(1) == nexperts:
-                        if nerr := abs(nparams - float(m.group(2))) < perr:
+                if not m.group(1) == pstr:
+                    if m.group(2) == nexperts:
+                        if nerr := abs(nparams - float(m.group(3))) < perr:
                             perr = nerr
-                            pstr = m.group(0)
-        return pstr
+                            pstr = m.group(1)
+        return (pstr,joiner.join(parts))
 
     def catalog_name(self):
-        catname = self.model_name.lower().removesuffix('-gguf')
-        if (mtype := self.model_type) == 'llama':
-            mtype = 'llama3' if self.vocab_size > 100000 else 'llama2'
-        parts = catname.split('-')
-        psize = Model.parse_param_size(parts, self.num_params, self.num_experts)
-        return '.'.join([mtype, psize, '-'.join(filter(lambda s: s != psize, parts))])
+        psize,name = self.parse_param_size('-')
+        return f'{self.model_type}.{psize}b.{name}'.lower()
+    
+    def formal_name(self):
+        psize,name = self.parse_param_size(' ')
+        return f'{name} {psize}B'
 
     def download(self):
         return Path(hfapi.snapshot_download(repo_id=self.repo_id))
@@ -206,3 +202,6 @@ class QuantModel(Model):
     def refresh(self):
         self.base_model.refresh()
         super().refresh()
+
+    def parse_param_size(self,joiner):
+        return self.base_model.parse_param_size(joiner)
