@@ -115,13 +115,17 @@ class Model:
         bparams = round(nparams)
         perr = nparams / 10
         pstr = (nexperts or '') + str(bparams)
+        mstr = None
         for p in (parts := self.model_name.split('-')):
-            if m := paramsize_rx.match(p):
-                if not m.group(1) == pstr:
+            if not p == mstr:
+                if m := paramsize_rx.match(p):
                     if m.group(2) == nexperts:
                         if nerr := abs(nparams - float(m.group(3))) < perr:
                             perr = nerr
                             pstr = m.group(1)
+                            mstr = p
+        if mstr:
+            parts = [p for p in parts if not p == mstr]
         return (pstr,joiner.join(parts))
 
     def catalog_name(self):
