@@ -84,12 +84,8 @@ class Model:
                 return self.repo_id.split('/')[0]
             case 'model_name':
                 return self.repo_id.split('/')[-1]
-            case 'base_model':
-                return self.card_data and Model(self.card_data.base_model)
             case 'config':
-                if self.repo_id.endswith('-GGUF') and self.base_model:
-                    return self.base_model.config
-                elif hfs.isfile(path := self.repo_id + '/config.json'):
+                if hfs.isfile(path := self.repo_id + '/config.json'):
                     return json.loads(hfs.read_text(path))
                 else:
                     raise RuntimeError(f'Base model {self.model_name} lacks a config.json')
@@ -154,7 +150,10 @@ class Model:
                 return Model.cache[repo_id]
             if not hfapi.repo_exists(repo_id):
                 raise ValueError(f'Repository {repo_id} does not exist')
-            obj = object.__new__(cls)
+            if repo_id.endswith('-GGUF'):
+                obj = object.__new__(QuantModel)
+            else:
+                obj = object.__new__(Model)
             obj._repo_id = repo_id
             Model.cache[repo_id] = obj
             return obj
@@ -194,3 +193,16 @@ class Model:
             psize = '10.7'
         else:
             bpsize = round()
+
+class QuantModel(Model):
+    def xattr(self, name):
+        match name:
+            case 'base_model':
+                return self.card_data and Model(self.card_data.base_model)
+            case 'config':
+                return self.base_model.config
+        return super().xattr(name)
+
+    def refresh(self):
+        self.base_model.refresh()
+        super().refresh()
