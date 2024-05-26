@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 from pathlib import Path
 import datetime
 import clear_screen
@@ -9,6 +10,8 @@ from typing import List
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
 
 hfapi = huggingface_hub.HfApi()
+
+paramsize_rx = re.compile('(\d+x)?(\d{1,3}(\.\d)?)b$')
 
 class Uploader(object):
     def __init__(self, repo_id: str, folder_path: Path, max_retries:int = 0):
