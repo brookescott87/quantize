@@ -186,6 +186,16 @@ class BaseModel(Model):
     @cached_property
     def num_experts(self): return self.config.get('num_local_experts')
 
+    @cached_property
+    def catalog_name(self):
+        psize,name = self.parse_param_size('-')
+        return f'{self.model_type}.{psize}b.{name}'.lower()
+
+    @cached_property
+    def formal_name(self):
+        psize,name = self.parse_param_size(' ')
+        return f'{name} {psize}B'
+
     def parse_param_size(self,joiner):
         if nexperts := self.num_experts:
             nexperts = f'{nexperts}x'
@@ -205,14 +215,6 @@ class BaseModel(Model):
         if mstr:
             parts = [p for p in parts if not p == mstr]
         return (pstr,joiner.join(parts))
-
-    def catalog_name(self):
-        psize,name = self.parse_param_size('-')
-        return f'{self.model_type}.{psize}b.{name}'.lower()
-    
-    def formal_name(self):
-        psize,name = self.parse_param_size(' ')
-        return f'{name} {psize}B'
 
 
 
