@@ -84,29 +84,23 @@ class Model:
                 return self.repo_id.split('/')[0]
             case 'model_name':
                 return self.repo_id.split('/')[-1]
-            case 'config':
-                if hfs.isfile(path := self.repo_id + '/config.json'):
-                    return json.loads(hfs.read_text(path))
-                else:
-                    raise RuntimeError(f'Base model {self.model_name} lacks a config.json')
-            case 'num_params':
-                return self.config and Model.calc_params_from_config(self.config)
-            case 'context':
-                return self.config.get('max_position_embeddings')
-            case 'model_type':
-                if (mtype := self.config.get('model_type')) == 'llama':
-                    return 'llama3' if self.vocab_size > 100000 else 'llama2'
-                else:
-                    return mtype
-            case 'vocab_size':
-                return self.config.get('vocab_size')
-            case 'num_experts':
-                return self.config.get('num_local_experts')
         return self.__getattribute__(name)
 
     def refresh(self):
-        for k in [k for k in self.__dict__ if not k[0] == '_']:
-            self.__dict__.pop(k, None)
+        for k in self.__dict__:
+            if not k.startswith('_'):
+                self.__dict__.pop(k, None)
+
+    def knows(self, name):
+        return name in self.__dict__
+    
+    def known(self, name):
+        return name.__dict__.get(name)
+    
+    def forget(self, *names):
+        for k in names:
+            if k in self.__dict__:
+                self.__dict__.pop(k, None)
 
     def parse_param_size(self,joiner):
         if nexperts := self.num_experts:
@@ -155,7 +149,9 @@ class Model:
             if repo_id.endswith('-GGUF'):
                 obj = object.__new__(QuantModel)
             else:
-                obj = object.__new__(Model)
+                obj = object.__new__(BaseModel)
+            if not isinstance(obj, cls):
+                print(f'Warning: {cls} object created as {obj.__class__}')
             obj._repo_id = repo_id
             Model.cache[repo_id] = obj
             return obj
@@ -195,6 +191,29 @@ class Model:
             psize = '10.7'
         else:
             bpsize = round()
+
+class BaseModel(Model):
+    def xattr(self, name):
+        match name:
+            case 'config':
+                if hfs.isfile(path := self.repo_id + '/config.json'):
+                    return json.loads(hfs.read_text(path))
+                else:
+                    raise RuntimeError(f'Base model {self.model_name} lacks a config.json')
+            case 'num_params':
+                return self.config and Model.calc_params_from_config(self.config)
+            case 'context':
+                return self.config.get('max_position_embeddings')
+            case 'model_type':
+                if (mtype := self.config.get('model_type')) == 'llama':
+                    return 'llama3' if self.vocab_size > 100000 else 'llama2'
+                else:
+                    return mtype
+            case 'vocab_size':
+                return self.config.get('vocab_size')
+            case 'num_experts':
+                return self.config.get('num_local_experts')
+        return super().xattr(name)
 
 class QuantModel(Model):
     def xattr(self, name):
