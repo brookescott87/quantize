@@ -205,9 +205,5 @@ class QuantModel(Model):
                 return self.base_model.config
         return super().xattr(name)
 
-    def refresh(self):
-        self.base_model.refresh()
-        super().refresh()
-
     def parse_param_size(self,joiner):
         return self.base_model.parse_param_size(joiner)
