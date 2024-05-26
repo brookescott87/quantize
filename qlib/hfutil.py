@@ -183,14 +183,6 @@ class Model:
         kvs = config['num_key_value_heads']
         vocabs = config['vocab_size']
         return Model.calc_params(blocks, embeds, ffs, heads, kvs, vocabs)
-    
-    @staticmethod
-    def canonize_paramsize(nparams):
-        bpsize = nparams / 1e9
-        if round(bpsize,1) == 10.7:
-            psize = '10.7'
-        else:
-            bpsize = round()
 
 class BaseModel(Model):
     def xattr(self, name):
