@@ -146,6 +146,8 @@ class Model:
 
     def __new__(cls, repo_id:str):
         if repo_id:
+            if '/' not in repo_id:
+                repo_id = organization + '/' + repo_id
             if (repo_id := Model.aliases.get(repo_id,repo_id)) in Model.cache:
                 return Model.cache[repo_id]
             if not hfapi.repo_exists(repo_id):
