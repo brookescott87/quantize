@@ -148,16 +148,6 @@ class Model(ProxyObject):
             kvembeds = int(embeds / dkvs)
         return embeds*(1 + blocks*(2 + 3*ffs + 2*(embeds + kvembeds)) + 2*vocabs)
 
-    @staticmethod
-    def calc_params_from_config(config:dict):
-        blocks = config['num_hidden_layers']
-        embeds = config['hidden_size']
-        ffs = config['intermediate_size']
-        heads = config['num_attention_heads']
-        kvs = config['num_key_value_heads']
-        vocabs = config['vocab_size']
-        return Model.calc_params(blocks, embeds, ffs, heads, kvs, vocabs)
-
 class BaseModel(Model):
     @cached_property
     def config(self):
@@ -168,7 +158,16 @@ class BaseModel(Model):
 
     @cached_property
     def num_params(self):
-        return self.config and Model.calc_params_from_config(self.config)
+        if config := self.config:
+            blocks = config['num_hidden_layers']
+            embeds = config['hidden_size']
+            ffs = config['intermediate_size']
+            heads = config['num_attention_heads']
+            kvs = config['num_key_value_heads']
+            vocabs = config['vocab_size']
+            return self.calc_params(blocks, embeds, ffs, heads, kvs, vocabs)
+        else:
+            return None
     
     @cached_property
     def context(self): return self.config.get('max_position_embeddings')
