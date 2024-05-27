@@ -107,7 +107,13 @@ class settable_cached_property(cached_property):
 
 class ProxyObject:
     @classmethod
+    def __default_instantiator__(cls, *args, **kwargs):
+        return cls
+    
+    @classmethod
     def __init_subclass__(cls):
+        if '__instantiator__' not in cls.__dict__:
+            cls.__instantiator__ = cls.__default_instantiator__
         if '__init_proxy__' in cls.__dict__:
             cls.__init_proxy__()
 
@@ -178,18 +184,21 @@ class Model(ProxyObject):
                 return Model.cache[repo_id]
             if not hfapi.repo_exists(repo_id):
                 raise ValueError(f'Repository {repo_id} does not exist')
-            if cls is Model:
-                if repo_id.endswith('-GGUF'):
-                    cls = QuantModel
-                else:
-                    cls = BaseModel
-            if not (obj := object.__new__(cls)):
+            inst = cls.__instantiator__(repo_id)
+            if not (obj := object.__new__(inst)):
                 raise RuntimeError(f"Failed to create object of type {cls}")
             obj._repo_id = repo_id
             Model.cache[repo_id] = obj
             return obj
         else:
             return None
+        
+    @classmethod
+    def __instantiator__(cls, repo_id:str):
+        if repo_id.endswith('-GGUF'):
+            return QuantModel.__instantiator__(repo_id)
+        else:
+            return BaseModel
 
     @staticmethod
     def calc_params(blocks, embeds, ffs, heads, kvs, vocabs):
@@ -280,17 +289,16 @@ class QuantModel(Model):
         def __call__(self, qm):
             return self.cp.func(qm.base_model)
 
+    @classmethod
+    def __instantiator__(cls, repo_id: str):
+        if repo_id.split('/')[0] in ('backyardai', 'FaradayDotDev'):
+            return BackyardQuantModel.__instantiator__(repo_id)
+        return QuantModel
+
     @cached_property
     def base_model(self):
         return self.card_data and BaseModel(self.card_data.base_model)
 
-    @property
-    def description(self):
-        if buf := self.readme:
-            info = readme.extract_info(buf)
-            return info.vars['Description']
-        return None
-    
     @classmethod
     def __init_proxy__(cls):
         for attrname,bcp in BaseModel.__dict__.items():
@@ -303,3 +311,11 @@ class QuantModel(Model):
     def generate_manifest(self):
         if not self.description or self.description == '(Add description here)':
             raise RuntimeError('Description must be set.')
+        
+class BackyardQuantModel(QuantModel):
+    @property
+    def description(self):
+        if buf := self.readme:
+            info = readme.extract_info(buf)
+            return info.vars['Description']
+        return None
