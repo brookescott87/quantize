@@ -139,6 +139,9 @@ class Model(ProxyObject):
         'microsoft/WizardLM-2-8x22B': 'alpindale/WizardLM-2-8x22B'
     }
 
+    def path(self, name:str) -> str:
+        return self.repo_id + '/' + name
+
     @cached_property
     def model_info(self): return hfapi.model_info(self.repo_id, files_metadata=False)
     
