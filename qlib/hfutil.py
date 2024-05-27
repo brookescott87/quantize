@@ -162,15 +162,16 @@ class Model(ProxyObject):
     @property
     def repo_id(self): return self._repo_id
 
-    @property
+    @settable_cached_property
     def readme(self):
-        if not self.knows('_readme'):
-            path = self.repo_id + '/README.md'
-            if hfs.exists(path):
-                self._readme = hfs.read_text(path, encoding='utf-8')
-            else:
-                self._readme = None
-        return self._readme
+        if hfs.exists(path := self.path('README.md')):
+            return hfs.read_text(path, encoding='utf-8')
+        else:
+            return None
+    
+    @readme.setter
+    def readme(self, value:str):
+        hfs.write_text(self.path('README.md'), value, encoding='utf-8')
 
     def download(self):
         return Path(hfapi.snapshot_download(repo_id=self.repo_id))
