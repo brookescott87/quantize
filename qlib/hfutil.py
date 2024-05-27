@@ -10,6 +10,7 @@ import clear_screen
 import huggingface_hub
 from typing import List,Any,Callable
 from . import readme
+from .misc import *
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
 
@@ -318,10 +319,6 @@ class QuantModel(Model):
                 qcp.attrname = attrname
                 setattr(cls, attrname, qcp)
 
-    def generate_manifest(self):
-        if not self.description or self.description == '(Add description here)':
-            raise RuntimeError('Description must be set.')
-        
 class BackyardQuantModel(QuantModel):
     @property
     def description(self):
@@ -329,3 +326,44 @@ class BackyardQuantModel(QuantModel):
             info = readme.extract_info(buf)
             return info.vars['Description']
         return None
+
+    file_format = 'gguf_v2'
+
+    def manifest_files(self):
+        mi = self.model_info_full
+        lfstem = self.catalog_name + '.' + self.file_format
+        for sib in mi.siblings:
+            fn = sib.rfilename
+            if fn.endswith('.gguf'):
+                lqtype = (qtype := fn.split('.')[-2]).lower()
+                lfname = (lname := lfstem + '.' + lqtype) + '.gguf'
+                yield {
+                    'commitHash': mi.sha,
+                    'isDeprecated': False,
+                    'displayLink' : self.url + '/',
+                    'hfPathFromRoot': fn,
+                    'fileFormat': 'gguf_v2',
+                    'hfRepo': self.repo_id,
+                    'localFilename': lfname,
+                    'size': sib.size,
+                    'displayName': f'{self.formal_name} ({qtype})',
+                    'name': lname,
+                    'cloudCtxSize': None
+                }
+    
+    def generate_manifest(self, recommended = False, readable = False):
+        if not self.description or self.description == '(Add description here)':
+            raise RuntimeError('Description must be set.')
+        
+        return to_json({
+            'ctxSize': self.context,
+            'description': self.description,
+            'displayName': self.formal_name,
+            'name': self.catalog_name,
+            'recommended': recommended,
+            'files': list(self.manifest_files())
+        }, readable)
+    
+    def show_manifest(self, recommended = False):
+        print(self.generate_manifest(recommended, True))
+    
