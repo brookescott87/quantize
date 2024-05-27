@@ -9,6 +9,7 @@ import json
 import clear_screen
 import huggingface_hub
 from typing import List
+from . import readme
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
 
@@ -121,6 +122,16 @@ class Model(ProxyObject):
 
     @property
     def repo_id(self): return self._repo_id
+
+    @property
+    def readme(self):
+        if not self.knows('_readme'):
+            path = self.repo_id + '/README.md'
+            if hfs.exists(path):
+                self._readme = hfs.read_text(path, encoding='utf-8')
+            else:
+                self._readme = None
+        return self._readme
 
     def download(self):
         return Path(hfapi.snapshot_download(repo_id=self.repo_id))
@@ -238,6 +249,13 @@ class QuantModel(Model):
     def base_model(self):
         return self.card_data and BaseModel(self.card_data.base_model)
 
+    @property
+    def description(self):
+        if buf := self.readme:
+            info = readme.extract_info(buf)
+            return info.vars['Description']
+        return None
+    
     @classmethod
     def __init_proxy__(cls):
         for attrname,bcp in BaseModel.__dict__.items():
