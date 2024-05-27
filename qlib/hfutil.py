@@ -8,7 +8,7 @@ import datetime
 import json
 import clear_screen
 import huggingface_hub
-from typing import List
+from typing import List,Any
 from . import readme
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
@@ -80,10 +80,10 @@ class ProxyObject:
             if not k.startswith('_'):
                 self.__dict__.pop(k, None)
 
-    def knows(self, name):
+    def knows(self, name:str) -> bool:
         return name in self.__dict__
     
-    def known(self, name):
+    def known(self, name:str) -> Any:
         return name.__dict__.get(name)
     
     def forget(self, *names):
