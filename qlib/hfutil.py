@@ -8,7 +8,7 @@ import datetime
 import json
 import clear_screen
 import huggingface_hub
-from typing import List,Any
+from typing import List,Any,Callable
 from . import readme
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
@@ -68,6 +68,42 @@ class Uploader(object):
 
 def list_models():
     return [m.id for m in hfapi.list_models(author=organization) if not m.private]
+
+class settable_cached_property(cached_property):
+    fset: Callable[[Any, Any], None] | None
+
+    def setter(self, fset: Callable[[Any, Any], None], /):
+        if not callable(fset):
+            raise TypeError('setter function is not callable')
+        self.fset = fset
+        return self
+
+    def __set__(self, instance: Any, value: Any, /) -> None:
+        if instance is None:
+            return self
+        if self.attrname is None:
+            raise TypeError(
+                "Cannot use cached_property instance without calling __set_name__ on it.")
+        try:
+            cache = instance.__dict__
+        except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+            msg = (
+                f"No '__dict__' attribute on {type(instance).__name__!r} "
+                f"instance to cache {self.attrname!r} property."
+            )
+            raise TypeError(msg) from None
+        with self.lock:
+            if self.fset:
+                self.fset(instance, value)
+            try:
+                cache[self.attrname] = value
+            except TypeError:
+                msg = (
+                    f"The '__dict__' attribute on {type(instance).__name__!r} instance "
+                    f"does not support item assignment for caching {self.attrname!r} property."
+                )
+                raise TypeError(msg) from None
+
 
 class ProxyObject:
     @classmethod
