@@ -85,7 +85,8 @@ def main():
         defvar(f, 'QUANTMODEL', quantmodel)
         defvar(f, 'AUTHOR', basemodel.owner)
         defvar(f, 'BASEMODEL', basemodel.model_name)
-        defvar(f, 'CATNAME', basemodel.catalog_name())
+        defvar(f, 'CATNAME', basemodel.catalog_name)
+        defvar(f, 'FULLNAME', basemodel.formal_name)
         defvar(f, 'DESCRIPTION', args.description)
         f.write(f'\ninclude {defs_mk}\n\n')
 
