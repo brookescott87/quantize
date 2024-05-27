@@ -183,12 +183,13 @@ class Model(ProxyObject):
                 return Model.cache[repo_id]
             if not hfapi.repo_exists(repo_id):
                 raise ValueError(f'Repository {repo_id} does not exist')
-            if repo_id.endswith('-GGUF'):
-                obj = object.__new__(QuantModel)
-            else:
-                obj = object.__new__(BaseModel)
-            if not isinstance(obj, cls):
-                print(f'Warning: {cls} object created as {obj.__class__}')
+            if cls is Model:
+                if repo_id.endswith('-GGUF'):
+                    cls = QuantModel
+                else:
+                    cls = BaseModel
+            if not (obj := object.__new__(cls)):
+                raise RuntimeError(f"Failed to create object of type {cls}")
             obj._repo_id = repo_id
             Model.cache[repo_id] = obj
             return obj
