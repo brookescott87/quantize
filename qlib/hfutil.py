@@ -116,12 +116,6 @@ class ProxyObject:
             if not k.startswith('_'):
                 self.__dict__.pop(k, None)
 
-    def knows(self, name:str) -> bool:
-        return name in self.__dict__
-    
-    def known(self, name:str) -> Any:
-        return name.__dict__.get(name)
-    
     def forget(self, *names):
         for k in names:
             if k in self.__dict__:
@@ -305,3 +299,7 @@ class QuantModel(Model):
                 qcp = cached_property(p)
                 qcp.attrname = attrname
                 setattr(cls, attrname, qcp)
+
+    def generate_manifest(self):
+        if not self.description or self.description == '(Add description here)':
+            raise RuntimeError('Description must be set.')
