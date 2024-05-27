@@ -142,6 +142,10 @@ class Model(ProxyObject):
     def path(self, name:str) -> str:
         return self.repo_id + '/' + name
 
+    @property
+    def url(self):
+        return 'https://huggingface.co/' + self.repo_id
+
     @cached_property
     def model_info(self):
         return hfapi.model_info(self.repo_id, files_metadata=False)
