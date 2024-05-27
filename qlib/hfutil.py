@@ -3,6 +3,7 @@ import os
 import re
 from pathlib import Path
 from functools import cached_property
+from dataclasses import dataclass
 import datetime
 import json
 import clear_screen
@@ -89,6 +90,12 @@ class ProxyObject:
             if k in self.__dict__:
                 self.__dict__.pop(k, None)
 
+@dataclass
+class ModelFile:
+    name: str
+    size: int
+    hash: str
+
 class Model(ProxyObject):
     cache = dict()
     aliases = {
@@ -99,7 +106,9 @@ class Model(ProxyObject):
     def model_info(self): return hfapi.model_info(self.repo_id, files_metadata=False)
     
     @cached_property
-    def files(self): return hfapi.model_info(self.repo_id, files_metadata=True).siblings
+    def files(self):
+        siblings = hfapi.model_info(self.repo_id, files_metadata=True).siblings
+        return [ModelFile(rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id) for rs in siblings]
     
     @cached_property
     def card_data(self): return self.model_info.card_data
