@@ -143,11 +143,17 @@ class Model(ProxyObject):
         return self.repo_id + '/' + name
 
     @cached_property
-    def model_info(self): return hfapi.model_info(self.repo_id, files_metadata=False)
+    def model_info(self):
+        return hfapi.model_info(self.repo_id, files_metadata=False)
+    
+    @cached_property
+    def model_info_full(self):
+        self.model_info = mi = hfapi.model_info(self.repo_id, files_metadata=True)
+        return mi
     
     @cached_property
     def files(self):
-        siblings = hfapi.model_info(self.repo_id, files_metadata=True).siblings
+        siblings = self.model_info_full.siblings
         return [ModelFile(rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id) for rs in siblings]
     
     @cached_property
