@@ -39,7 +39,7 @@ def main():
     if not '/' in (baserepo := args.basemodel.removeprefix('https://huggingface.co/')):
         raise ValueError('basemodel must be of the form owner/model')
     
-    basemodel = qlib.Model(baserepo)
+    basemodel = qlib.BaseModel(baserepo)
 
     quantmodel = basemodel.model_name + args.affix
     quantmodel_dir = args.build_root / (quantmodel + '-GGUF')
