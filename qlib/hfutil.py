@@ -85,6 +85,12 @@ class Model(ProxyObject):
     def path(self, name:str) -> str:
         return self.repo_id + '/' + name
 
+    def read_json(self, filename:str) -> dict:
+        if hfs.isfile(path := self.path(filename)):
+            return json.loads(hfs.read_text(path))
+        else:
+            raise FileNotFoundError(f"'{filename}' not found in model {self.repo_id}")
+
     @property
     def url(self):
         return 'https://huggingface.co/' + self.repo_id
@@ -168,10 +174,7 @@ class Model(ProxyObject):
 class BaseModel(Model):
     @cached_property
     def config(self):
-        if hfs.isfile(path := self.repo_id + '/config.json'):
-            return json.loads(hfs.read_text(path))
-        else:
-            raise RuntimeError(f'Base model {self.model_name} lacks a config.json')
+        return self.read_json('config.json')
 
     @cached_property
     def num_params(self):
