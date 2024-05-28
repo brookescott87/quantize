@@ -223,6 +223,22 @@ class BaseModel(Model):
         psize,name = self.parse_param_size(' ')
         return f'{name} {psize}B'
 
+    def guess_prompt_format(self):
+        bos,eos = [self.tokenizer_config.get(k) for k in ('bos_token','eos_token')]
+
+        if bos == '<|im_start|>' or eos == '<|im_end|>':
+            return 'ChatML'
+        if bos == '<|begin_of_text|>' or eos in ('<|end_of_text|>','<|eot_id|>'):
+            return 'Llama3'
+        
+        if ct := str(self.tokenizer_config.get('chat_template','')):
+            for k in ('<|im_start|>','<|im_end|>'):
+                if k in ct: return 'ChatML'
+            for k in ('<|begin_of_text|>','<|end_of_text|>','<|eot_id|>'):
+                if k in ct: return 'Llama3'
+
+        return None
+
     def parse_param_size(self,joiner):
         if nexperts := self.num_experts:
             nexperts = f'{nexperts}x'
@@ -304,9 +320,12 @@ class BackyardQuantModel(QuantModel):
                     'cloudCtxSize': None
                 }
     
-    def generate_manifest(self, recommended = False, readable = False):
+    def generate_manifest(self, recommended = False, prompt_format = False, readable = False):
         if not self.description or self.description == '(Add description here)':
             raise RuntimeError('Description must be set.')
+        if prompt_format is False:
+            prompt_format = self.base_model.guess_prompt_format()
+        timestamp = datetime.datetime.strftime(datetime.datetime.now(tz=datetime.UTC),'%Y-%m-%dT%H:%M:%S.%f')[:-3]
         
         return to_json({
             'ctxSize': self.context,
@@ -314,9 +333,14 @@ class BackyardQuantModel(QuantModel):
             'displayName': self.formal_name,
             'name': self.catalog_name,
             'recommended': recommended,
-            'files': list(self.manifest_files())
+            'files': list(self.manifest_files()),
+            'featureToNewUsers': False,
+            'updatedAt': timestamp,
+            'createdAt': timestamp,
+            'promptFormat': prompt_format or 'general',
+            'isDefault': not prompt_format
         }, readable)
     
     def show_manifest(self, recommended = False):
-        print(self.generate_manifest(recommended, True))
+        print(self.generate_manifest(recommended, readable = True))
     
