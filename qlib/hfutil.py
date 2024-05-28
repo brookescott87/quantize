@@ -177,6 +177,14 @@ class BaseModel(Model):
         return self.read_json('config.json')
 
     @cached_property
+    def tokenizer(self):
+        return self.read_json('tokenizer.json')
+
+    @cached_property
+    def tokenizer_config(self):
+        return self.read_json('tokenizer_config.json')
+
+    @cached_property
     def num_params(self):
         if config := self.config:
             blocks = config['num_hidden_layers']
