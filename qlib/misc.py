@@ -40,13 +40,7 @@ class settable_cached_property(cached_property):
 
 class ProxyObject:
     @classmethod
-    def __default_instantiator__(cls, *_, **__):
-        return cls
-    
-    @classmethod
     def __init_subclass__(cls):
-        if '__instantiator__' not in cls.__dict__:
-            cls.__instantiator__ = cls.__default_instantiator__
         if '__init_proxy__' in cls.__dict__:
             cls.__init_proxy__()
 
@@ -59,8 +53,6 @@ class ProxyObject:
         for k in names:
             if k in self.__dict__:
                 self.__dict__.pop(k, None)
-
-
 
 def to_json(obj:Any, readable=False):
     dump_opts = {'indent': 4} if readable else { 'separators': (',',':') }

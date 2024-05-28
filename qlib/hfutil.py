@@ -105,10 +105,12 @@ class Model(ProxyObject):
         return mi
     
     @cached_property
-    def files(self):
+    def files(self, matcher=None):
         siblings = self.model_info_full.siblings
-        return [ModelFile(rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id) for rs in siblings]
-    
+        for rs in siblings:
+            if not matcher or matcher(rs.rfilename):
+                yield ModelFile(rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id)
+
     @cached_property
     def card_data(self): return self.model_info.card_data
     
@@ -143,22 +145,16 @@ class Model(ProxyObject):
                 return Model.cache[repo_id]
             if not hfapi.repo_exists(repo_id):
                 raise ValueError(f'Repository {repo_id} does not exist')
-            inst = cls.__instantiator__(repo_id)
-            if not (obj := object.__new__(inst)):
-                raise RuntimeError(f"Failed to create object of type {cls}")
+            if (instcls := cls) is Model:
+                instcls = QuantModel if repo_id.endswith('-GGUF') else BaseModel
+            if not (obj := object.__new__(instcls)):
+                raise RuntimeError(f"Failed to create object of type {instcls}")
             obj._repo_id = repo_id
             Model.cache[repo_id] = obj
             return obj
         else:
             return None
         
-    @classmethod
-    def __instantiator__(cls, repo_id:str):
-        if repo_id.endswith('-GGUF'):
-            return QuantModel.__instantiator__(repo_id)
-        else:
-            return BaseModel
-
     @staticmethod
     def calc_params(blocks, embeds, ffs, heads, kvs, vocabs):
         if heads % kvs:
@@ -269,12 +265,6 @@ class QuantModel(Model):
         def __call__(self, qm):
             return self.cp.func(qm.base_model)
 
-    @classmethod
-    def __instantiator__(cls, repo_id: str):
-        if repo_id.split('/')[0] in ('backyardai', 'FaradayDotDev'):
-            return BackyardQuantModel.__instantiator__(repo_id)
-        return QuantModel
-
     @cached_property
     def base_model(self):
         return self.card_data and BaseModel(self.card_data.base_model)
@@ -287,60 +277,3 @@ class QuantModel(Model):
                 qcp = cached_property(p)
                 qcp.attrname = attrname
                 setattr(cls, attrname, qcp)
-
-class BackyardQuantModel(QuantModel):
-    @property
-    def description(self):
-        if buf := self.readme:
-            info = backyard.extract_info(buf)
-            return info.vars['Description']
-        return None
-
-    file_format = 'gguf_v2'
-
-    def manifest_files(self):
-        mi = self.model_info_full
-        lfstem = self.catalog_name + '.' + self.file_format
-        for sib in mi.siblings:
-            fn = sib.rfilename
-            if fn.endswith('.gguf'):
-                lqtype = (qtype := fn.split('.')[-2]).lower()
-                lfname = (lname := lfstem + '.' + lqtype) + '.gguf'
-                yield {
-                    'commitHash': mi.sha,
-                    'isDeprecated': False,
-                    'displayLink' : self.url + '/',
-                    'hfPathFromRoot': fn,
-                    'fileFormat': 'gguf_v2',
-                    'hfRepo': self.repo_id,
-                    'localFilename': lfname,
-                    'size': sib.size,
-                    'displayName': f'{self.formal_name} ({qtype})',
-                    'name': lname,
-                    'cloudCtxSize': None
-                }
-    
-    def generate_manifest(self, recommended = False, prompt_format = False, readable = False):
-        if not self.description or self.description == '(Add description here)':
-            raise RuntimeError('Description must be set.')
-        if prompt_format is False:
-            prompt_format = self.base_model.guess_prompt_format()
-        timestamp = datetime.datetime.strftime(datetime.datetime.now(tz=datetime.UTC),'%Y-%m-%dT%H:%M:%S.%f')[:-3]
-        
-        return to_json({
-            'ctxSize': self.context,
-            'description': self.description,
-            'displayName': self.formal_name,
-            'name': self.catalog_name,
-            'recommended': recommended,
-            'files': list(self.manifest_files()),
-            'featureToNewUsers': False,
-            'updatedAt': timestamp,
-            'createdAt': timestamp,
-            'promptFormat': prompt_format or 'general',
-            'isDefault': True
-        }, readable)
-    
-    def show_manifest(self, recommended = False):
-        print(self.generate_manifest(recommended, readable = True))
-    

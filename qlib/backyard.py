@@ -1,7 +1,9 @@
 import re
 from dataclasses import dataclass,field
 from typing import Dict
-
+from datetime import datetime as dt, UTC
+from . import hfutil
+from . import misc
 link_rx = re.compile('\[(.*?)]\(((https://[^/]+/)([^/]+/.*))\)$')
 ctx_rx = re.compile('(\d+) tokens$')
 
@@ -31,3 +33,55 @@ def extract_vars(text: str) -> dict:
     blocks = text.split('\n***\n')
     if len(blocks) > 1:
         info_block = blocks[1]
+
+def timestamp(t: dt=None):
+    return dt.strftime(t or dt.now(tz=UTC),'%Y-%m-%dT%H:%M:%S.%f')[:-3]
+
+class Manifest:
+    @staticmethod
+    def files(qm: hfutil.QuantModel, file_format:str = 'gguf_v2'):
+        for mf in qm.files(lambda fn: fn.endswith('.gguf')):
+            qtype = mf.name.split('.')[-2]
+            lname = f'{mf.catalog_name}.{file_format}{qtype.lower()}'
+            yield {
+                'commitHash': qm.model_info.sha,
+                'isDeprecated': False,
+                'displayLink' : qm.url + '/',
+                'hfPathFromRoot': mf.name,
+                'fileFormat': file_format,
+                'hfRepo': qm.repo_id,
+                'localFilename': lname + '.gguf',
+                'size': mf.size,
+                'displayName': f'{mf.formal_name} ({qtype})',
+                'name': lname,
+                'cloudCtxSize': None
+            }
+
+    @staticmethod
+    def generate(qm: hfutil.QuantModel, recommended = False, prompt_format = False, readable = False) -> str:
+        if buf := qm.readme:
+            info = extract_info(buf)
+            if not (description := info.vars.get('Description')):
+                raise ValueError("Can't extract description from infovar block")
+            if description == '(Add description here)':
+                raise ValueError('Description must be set')
+        if prompt_format is False:
+            prompt_format = qm.base_model.guess_prompt_format()
+        ts = timestamp()
+        
+        return misc.to_json({
+            'ctxSize': qm.context,
+            'description': description,
+            'displayName': qm.formal_name,
+            'name': qm.catalog_name,
+            'recommended': recommended,
+            'files': list(Manifest.files(qm)),
+            'featureToNewUsers': False,
+            'updatedAt': ts,
+            'createdAt': ts,
+            'promptFormat': prompt_format or 'general',
+            'isDefault': True
+        }, readable)
+
+    def show(qm: hfutil.QuantModel, readable = True, **kwargs):
+        print(Manifest.generate(qm, readable = readable, **kwargs))
