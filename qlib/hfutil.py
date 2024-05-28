@@ -215,12 +215,14 @@ class BaseModel(Model):
 
     @cached_property
     def catalog_name(self):
-        psize,name = self.parse_param_size('-')
+        psize,parts = self.parse_param_size()
+        name = '-'.join(parts)
         return f'{self.model_type}.{psize}b.{name}'.lower()
 
     @cached_property
     def formal_name(self):
-        psize,name = self.parse_param_size(' ')
+        psize,parts = self.parse_param_size()
+        name = ' '.join([p[0].upper()+p[1:] for p in parts])
         return f'{name} {psize}B'
 
     def guess_prompt_format(self):
@@ -239,7 +241,7 @@ class BaseModel(Model):
 
         return None
 
-    def parse_param_size(self,joiner):
+    def parse_param_size(self):
         if nexperts := self.num_experts:
             nexperts = f'{nexperts}x'
         nparams = self.num_params / 1e9
@@ -257,9 +259,7 @@ class BaseModel(Model):
                             mstr = p
         if mstr:
             parts = [p for p in parts if not p == mstr]
-        return (pstr,joiner.join(parts))
-
-
+        return (pstr,parts)
 
 class QuantModel(Model):
     class proxy_property:
