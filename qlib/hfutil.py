@@ -9,7 +9,7 @@ import json
 import clear_screen
 import huggingface_hub
 from typing import List
-from . import readme
+from . import backyard
 from .misc import *
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
@@ -292,7 +292,7 @@ class BackyardQuantModel(QuantModel):
     @property
     def description(self):
         if buf := self.readme:
-            info = readme.extract_info(buf)
+            info = backyard.extract_info(buf)
             return info.vars['Description']
         return None
 
