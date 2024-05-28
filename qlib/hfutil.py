@@ -9,7 +9,6 @@ import json
 import clear_screen
 import huggingface_hub
 from typing import List
-from . import backyard
 from .misc import *
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
