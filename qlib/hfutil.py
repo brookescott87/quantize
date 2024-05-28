@@ -338,7 +338,7 @@ class BackyardQuantModel(QuantModel):
             'updatedAt': timestamp,
             'createdAt': timestamp,
             'promptFormat': prompt_format or 'general',
-            'isDefault': not prompt_format
+            'isDefault': True
         }, readable)
     
     def show_manifest(self, recommended = False):
