@@ -77,8 +77,8 @@ imatrix_dataset.txt:
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
 
-README.md:
-	$(mkreadme) -o $@ $(BASEREPO)
+README.md: GNUmakefile
+	$(mkreadme) $(if $(DESCRIPTION),-s $(DESCRIPTION)) -o $@ $(BASEREPO)
 
 $(source)/$(BASEMODEL):
 	mkdir -p $(@D)
