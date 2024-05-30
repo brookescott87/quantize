@@ -104,11 +104,14 @@ class Model(ProxyObject):
         return mi
     
     @cached_property
-    def files(self, matcher=None):
+    def files(self):
         siblings = self.model_info_full.siblings
-        for rs in siblings:
-            if not matcher or matcher(rs.rfilename):
-                yield ModelFile(rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id)
+        return [ModelFile(rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id) for rs in siblings]
+
+    def iterfiles(self, matcher=None):
+        for mf in self.files:
+            if not matcher or matcher(mf.name):
+                yield mf
 
     @cached_property
     def card_data(self): return self.model_info.card_data
