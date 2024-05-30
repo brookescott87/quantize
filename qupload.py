@@ -65,9 +65,11 @@ def main():
         raise ValueError(f'"{qdir}" is not a directory.')
 
     if args.ggufs:
+        if args.only_shards:
+            gguf_pattern = shard_pattern
+        else:
+            check_quant(qdir, args.keep_oversize)
         allow_patterns.append(gguf_pattern)
-        ignore_patterns.append(shard_pattern)
-        check_quant(qdir, args.keep_oversize)
 
     if not (owner := args.organization):
         raise ValueError('either HF_DEFAULT_ORGANIZATION must be set or --organization must be given')
@@ -78,10 +80,7 @@ def main():
     if args.upload:
         uploader = qlib.Uploader(repo_id, qdir, args.retries)
 
-        if (success := uploader.upload(f'Upload {repo}', allow_patterns, ignore_patterns, skip=args.only_shards)):
-            if args.ggufs:
-                if any(qdir.glob(shard_pattern)):
-                    success = uploader.upload('Upload shards', [shard_pattern], [])
+        success = uploader.upload(f'Upload {repo}', allow_patterns, ignore_patterns)
 
         clear_screen.clear()
         print('# Upload %s after %s and %d retr%s.'%('succeeded' if success else 'failed',
