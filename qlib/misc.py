@@ -2,6 +2,7 @@ import re
 import json
 from typing import Any, Callable
 from functools import cached_property
+import argparse
 
 _re_special_chars_map = {n:u for n,u in re._special_chars_map.items() if chr(n).isprintable()}
 
@@ -66,3 +67,23 @@ def to_json(obj:Any, readable=False):
 
 def varname(s:str):
     return s.lower().replace(' ','_')
+
+class BooleanOptionalAction(argparse.BooleanOptionalAction):
+    def __init__(self, option_strings, *args, **kwargs):
+        _option_strings = []
+        self.negators = []
+        for opt in option_strings:
+            if len(opt) > 1 and opt[0] == '-':
+                _option_strings.append(opt)
+                if not opt[1] == '-':
+                    _option_strings.append(nopt := '-n' + opt[1:])
+                    self.negators.append(nopt)
+            else:
+                raise ValueError(f'invalid option: {opt}')
+        super().__init__(_option_strings, *args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if option_string in self.negators:
+            setattr(namespace, self.dest, False)
+        else:
+            super().__call__(parser, namespace, values, option_string)
