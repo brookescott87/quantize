@@ -1,6 +1,12 @@
+import re
 import json
 from typing import Any, Callable
 from functools import cached_property
+
+_re_special_chars_map = {n:u for n,u in re._special_chars_map.items() if chr(n).isprintable()}
+
+def re_escape(s:str) -> str:
+    return s.translate(_re_special_chars_map)
 
 class settable_cached_property(cached_property):
     fset: Callable[[Any, Any], None] | None
