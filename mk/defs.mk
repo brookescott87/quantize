@@ -98,4 +98,4 @@ $(source)/$(BASEMODEL):
 .DELETE_ON_ERROR:
 
 clean::
-	rm -fr $(source) *~ *.gguf *.bin *.imatrix
+	$(if $(wildcard *.tmp),rm -f *.tmp)
