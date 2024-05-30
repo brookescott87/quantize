@@ -43,8 +43,8 @@ def main():
     parser.add_argument('--initialize', '-i', action='store_true', help="Create new if doesn't exist") 
     parser.add_argument('--retries', '-r', type=int, default=0, help='Number of times to retry')
     parser.add_argument('--only_shards', '-S', action='store_true', help='Only shards')
-    parser.add_argument('--no-ggufs', '-g', action='store_true', help='Exclude GGUFs from upload')
-    parser.add_argument('--no-upload', '-u', action='store_true', help='Do not upload any files')
+    parser.add_argument('--ggufs', '-g', action=qlib.misc.BooleanOptionalAction, default=True, help='Include GGUFs in upload')
+    parser.add_argument('--upload', '-u', action=qlib.misc.BooleanOptionalAction, default=True, help='Perform the upload')
     parser.add_argument('--keep-oversize', '--keep', '-k', action='store_true', help='Keep oversize GGUFs after splitting')
     args = parser.parse_args()
 
@@ -64,7 +64,7 @@ def main():
     if not qdir.is_dir():
         raise ValueError(f'"{qdir}" is not a directory.')
 
-    if not args.no_ggufs:
+    if args.ggufs:
         allow_patterns.append(gguf_pattern)
         ignore_patterns.append(shard_pattern)
         check_quant(qdir, args.keep_oversize)
@@ -75,11 +75,11 @@ def main():
     repo = qdir.name
     repo_id = f'{owner}/{repo}'
 
-    if not args.no_upload:
+    if args.upload:
         uploader = qlib.Uploader(repo_id, qdir, args.retries)
 
         if (success := uploader.upload(f'Upload {repo}', allow_patterns, ignore_patterns, skip=args.only_shards)):
-            if not args.no_ggufs:
+            if args.ggufs:
                 if any(qdir.glob(shard_pattern)):
                     success = uploader.upload('Upload shards', [shard_pattern], [])
 
