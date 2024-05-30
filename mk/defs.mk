@@ -39,6 +39,11 @@ $(error ORGANIZATION is not set)
 endif
 endif
 
+mkreadme_opts :=
+mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
+mkreadme_opts += $(if $(AUTHOR),--author $(AUTHOR))
+mkreadme_opts += $(if $(FULLNAME),--title $(FULLNAME))
+
 
 QTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M Q2_K_S Q2_K
 QTYPES += IQ3_XXS IQ3_XS Q3_K_S IQ3_S IQ3_M Q3_K_M Q3_K_L IQ4_XS
@@ -78,7 +83,8 @@ $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
 
 README.md: GNUmakefile
-	$(mkreadme) $(if $(DESCRIPTION),-s $(DESCRIPTION)) -o $@ $(BASEREPO)
+	rm -f $@
+	$(mkreadme) $(mkreadme_opts) -o $@ $(BASEREPO)
 
 $(source)/$(BASEMODEL):
 	mkdir -p $(@D)
