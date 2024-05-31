@@ -168,5 +168,6 @@ class Manifest:
             'isDefault': True
         }, readable)
 
+    @staticmethod
     def show(qm: hfutil.QuantModel, readable = True, **kwargs):
         print(Manifest.generate(qm, readable = readable, **kwargs))
