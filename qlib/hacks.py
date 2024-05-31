@@ -8,3 +8,9 @@ def path_add_str(self: Path, other) -> Path:
 
 if not hasattr(Path, '__add__'):
     setattr(Path, '__add__', path_add_str)
+
+def path_size(self: Path, *args, **kwargs):
+    return self.stat(*args, **kwargs).st_size
+
+if not hasattr(Path, 'size'):
+    setattr(Path, 'size', path_size)
