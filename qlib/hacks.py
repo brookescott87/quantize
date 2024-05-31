@@ -7,4 +7,4 @@ def path_add_str(self: Path, other) -> Path:
         raise TypeError('Unsupported operand type(s) for +')
 
 if not hasattr(Path, '__add__'):
-    Path.__add__ = path_add_str
+    setattr(Path, '__add__', path_add_str)
