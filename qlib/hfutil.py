@@ -1,5 +1,6 @@
 import sys
 import os
+import io
 import re
 from pathlib import Path
 from functools import cached_property
@@ -8,8 +9,10 @@ import datetime
 import json
 import clear_screen
 import huggingface_hub
+import hashlib
 from typing import List
 from .misc import *
+from .iobuffer import *
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
 
@@ -17,6 +20,41 @@ hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
 
 paramsize_rx = re.compile('((\d+x)?(\d{1,3}(\.\d)?))[Bb]$')
+
+@classmethod
+def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
+    hexdigest = digest = None
+    if os.path.exists(sha_path := path + '.sha256'):
+        if os.path.getmtime(sha_path) > os.path.getmtime(path):
+            with open(sha_path, 'rt') as file:
+                hexdigest = file.read().strip()
+                digest = bytes.fromhex(hexdigest)
+                print(f'Read hash from {sha_path}')
+        else:
+            os.unlink(sha_path)
+
+    size = os.path.getsize(path)
+    with io.open(path, 'rb') as file:
+        sample = file.peek(512)[:512]
+        if not digest:
+            pl = ProgressLine(size, f'Hashing {os.path.basename(path)}')
+            h = hashlib.sha256(usedforsecurity=False)
+            buffer = IOBuffer(1024*1024)
+            while nbytes := buffer.readfrom(file):
+                h.update(buffer.bytes)
+                pl.update_progress(nbytes)
+            pl.finish()
+            digest = h.digest()
+
+    if not hexdigest and size > 1_000_000:
+        hexdigest = digest.hex()
+        with io.open(sha_path, 'wt') as file:
+            file.write(hexdigest + '\n')
+            print(f'Wrote hash to {sha_path}')
+
+    return cls(size=size, sha256=digest, sample=sample)
+
+setattr(huggingface_hub.lfs.UploadInfo, 'from_path', UploadInfo_from_path)
 
 class Uploader(object):
     def __init__(self, repo_id: str, folder_path: Path, max_retries:int = 0):
