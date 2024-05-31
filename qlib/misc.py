@@ -1,5 +1,7 @@
+import sys
 import re
 import json
+from datetime import datetime as dt, timedelta
 from typing import Any, Callable
 from functools import cached_property
 import argparse
@@ -87,3 +89,69 @@ class BooleanOptionalAction(argparse.BooleanOptionalAction):
             setattr(namespace, self.dest, False)
         else:
             super().__call__(parser, namespace, values, option_string)
+
+class StatusLine:
+    def __init__(self, stream=sys.stdout):
+        self.out = stream
+        self.pos = 0
+        self.line = 0
+
+    def retn(self, linefeed = False):
+        if (pad := self.line - self.pos) > 0:
+            self.out.write(' '*pad)
+        if linefeed:
+            self.out.write('\n')
+            self.line = 0
+        else:
+            self.out.write('\r')
+            self.out.flush()
+            self.line = self.pos
+        self.pos = 0
+
+    def print(self, text):
+        self.pos += self.out.write(text)
+
+class ProgressLine(StatusLine):
+    max_staleness = timedelta(milliseconds=200)
+
+    def __init__(self, total_amount:int, message:str, stream=sys.stdout):
+        super().__init__(stream)
+        self.message = message
+        self.total_amount = total_amount
+        self.completed = 0
+        self.last_update = self.start_time = dt.now()
+
+    def update_progress(self, amount):
+        self.completed += amount
+        if self.staleness > self.max_staleness:
+            progress = self.completed / self.total_amount
+            estr = ProgressLine.format_timedelta(elapsed := self.elapsed)
+            remaining = elapsed/progress
+            rstr = ProgressLine.format_timedelta(remaining)
+            self.print(f'{self.message}: {self.completed:15,} of {self.total_amount:15,} ({progress*100:.1f}%) [{estr}<{rstr}]')
+            self.retn()
+            self.last_update = dt.now()
+
+    def finish(self, message=None):
+        self.retn()
+        estr = ProgressLine.format_timedelta(self.elapsed)
+        self.print(f'{message or self.message}: {self.completed:,} in {estr}\n')
+
+    @property
+    def elapsed(self):
+        return dt.now() - self.start_time
+    
+    @property
+    def staleness(self):
+        return dt.now() - self.last_update
+
+    @staticmethod
+    def format_timedelta(delta: timedelta) -> str:
+        """Formats a timedelta duration to %H:%M:%S format"""
+        seconds = int(delta.total_seconds())
+
+        hours, seconds = divmod(seconds, 3600)
+        minutes, seconds = divmod(seconds, 60)
+
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
