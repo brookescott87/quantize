@@ -128,20 +128,21 @@ class Manifest:
     def files(qm: hfutil.QuantModel, file_format:str = 'gguf_v2'):
         for mf in qm.iterfiles(lambda fn: fn.endswith('.gguf')):
             qtype = mf.name.split('.')[-2]
-            lname = f'{qm.catalog_name}.{file_format}{qtype.lower()}'
-            yield {
-                'commitHash': qm.model_info.sha,
-                'isDeprecated': False,
-                'displayLink' : qm.url + '/',
-                'hfPathFromRoot': mf.name,
-                'fileFormat': file_format,
-                'hfRepo': qm.repo_id,
-                'localFilename': lname + '.gguf',
-                'size': mf.size,
-                'displayName': f'{qm.formal_name} ({qtype})',
-                'name': lname,
-                'cloudCtxSize': None
-            }
+            if '-split-' not in qtype:
+                lname = f'{qm.catalog_name}.{file_format}.{qtype.lower()}'
+                yield {
+                    'commitHash': qm.model_info.sha,
+                    'isDeprecated': False,
+                    'displayLink' : qm.url + '/',
+                    'hfPathFromRoot': mf.name,
+                    'fileFormat': file_format,
+                    'hfRepo': qm.repo_id,
+                    'localFilename': lname + '.gguf',
+                    'size': mf.size,
+                    'displayName': f'{qm.formal_name} ({qtype})',
+                    'name': lname,
+                    'cloudCtxSize': None
+                }
 
     @staticmethod
     def generate(qm: hfutil.QuantModel, recommended = False, description = None, prompt_format = False, readable = False) -> str:
