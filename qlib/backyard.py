@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import List,Tuple
 from datetime import datetime as dt, UTC
+import requests
 from . import hfutil
 from . import misc
 
@@ -175,30 +176,56 @@ class Manifest:
         ts = timestamp()
         
         return {
-            'ctxSize': self.model.context,
-            'description': self.description,
-            'displayName': self.model.formal_name,
-            'name': self.model.catalog_name,
-            'recommended': self.recommended,
-            'files': list(self.files()),
-            'featureToNewUsers': False,
-            'updatedAt': ts,
-            'createdAt': ts,
-            'promptFormat': self.prompt_format or 'general',
-            'isDefault': True
-        }
-    
-    def request(self, readable = False):
-        req = {
-            '0': {
-                'json': {
-                    'modelFamily': self.generate(),
-                    'isUpdate': False
-                }
+            'modelFamily': {
+                'ctxSize': self.model.context,
+                'description': self.description,
+                'displayName': self.model.formal_name,
+                'name': self.model.catalog_name,
+                'recommended': self.recommended,
+                'files': list(self.files()),
+                'featureToNewUsers': False,
+                'updatedAt': ts,
+                'createdAt': ts,
+                'promptFormat': self.prompt_format or 'general',
+                'isDefault': True
             }
         }
-        return misc.to_json(req, readable)
+    
+    def json(self, readable = False):
+        return misc.to_json(self.generate(), readable)
     
     def show(self, readable = True):
-        print(self.request(readable))
+        print(self.json(readable))
 
+class Requestor:
+    uuid_rx = re.compile('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}')
+    cookie_name = '__Secure-next-auth.session-token'
+    server = 'hub-uploader-private.faraday.dev'
+
+    def __init__(self, token:str):
+        if self.uuid_rx.fullmatch(token):
+            self.token = token
+        else:
+            raise ValueError('This is not a valid UUID')
+        self.cookie_jar = requests.cookies.RequestsCookieJar()
+        cookie = requests.cookies.create_cookie(self.cookie_name, token, domain=self.server,
+                                                secure=True, discard=False,
+                                                expires=int(dt.now().timestamp()) + 3600*24*30)
+        self.cookie_jar.set_cookie(cookie)
+
+    def request(self, command, data):
+        if isinstance(data,dict):
+            data = misc.to_json(data)
+        payload = '{"0":{"json":%s}}'%(data,)
+        url = f'https://{self.server}/api/trpc/models.{command}?batch=1'
+        r = requests.post(url, payload, cookies=self.cookie_jar)
+        if r.ok:
+            return r.json()
+        raise RuntimeError(f'Request failed: {r.reason}')
+    
+    def get_last_commit(self, model_id):
+        data = {'url': f'https://huggingface.co/{model_id}'}
+        return self.request('getLastCommit', data)
+
+    def submit(self, manifest: Manifest):
+        return self.request('addPendingApproval', manifest.json())
