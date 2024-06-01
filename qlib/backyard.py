@@ -145,7 +145,7 @@ class Manifest:
                 }
 
     @staticmethod
-    def generate(qm: hfutil.QuantModel, recommended = False, description = None, prompt_format = False, readable = False) -> str:
+    def generate(qm: hfutil.QuantModel, recommended = False, description = None, prompt_format = False, readable = False) -> dict:
         if not description:
             description = extract_info(qm.readme).info.description
         if not description or description == '(Add description here)':
@@ -154,7 +154,7 @@ class Manifest:
             prompt_format = qm.base_model.guess_prompt_format()
         ts = timestamp()
         
-        return misc.to_json({
+        return {
             'ctxSize': qm.context,
             'description': description,
             'displayName': qm.formal_name,
@@ -166,8 +166,21 @@ class Manifest:
             'createdAt': ts,
             'promptFormat': prompt_format or 'general',
             'isDefault': True
-        }, readable)
-
+        }
+    
+    @staticmethod
+    def request(qm: hfutil.QuantModel, readable = False, **kwargs):
+        req = {
+            '0': {
+                'json': {
+                    'modelFamily': Manifest.generate(qm, **kwargs),
+                    'isUpdate': False
+                }
+            }
+        }
+        return misc.to_json(req, readable)
+    
     @staticmethod
     def show(qm: hfutil.QuantModel, readable = True, **kwargs):
-        print(Manifest.generate(qm, readable = readable, **kwargs))
+        print(Manifest.request(qm, readable, **kwargs))
+
