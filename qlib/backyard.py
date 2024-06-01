@@ -9,6 +9,9 @@ from . import misc
 link_rx = re.compile('\[(.*?)]\(((https://[^/]+/)([^/]+/.*))\)$')
 ctx_rx = re.compile('(\d+) tokens$')
 
+def badattr(self, attr:str):
+    raise AttributeError(f'{repr(self.__class__)} object has no attribute {repr(attr)}')
+
 class InfoBlock:
     class Field:
         def __init__(self, name, value):
@@ -124,63 +127,78 @@ def timestamp(t: dt=None):
 
 
 class Manifest:
-    @staticmethod
-    def files(qm: hfutil.QuantModel, file_format:str = 'gguf_v2'):
-        for mf in qm.iterfiles(lambda fn: fn.endswith('.gguf')):
+    file_format:str = 'gguf_v2'
+
+    def __init__(self, model:hfutil.QuantModel, recommended:bool=None, description:str = None, prompt_format:str = None):
+        self.model = model
+        if recommended is not None:
+            self.recommended = recommended
+        if description is not None:
+            self.description = description
+        if prompt_format is not None:
+            self.prompt_format = prompt_format
+    
+    @cached_property
+    def recommended(self): return False
+
+    @cached_property
+    def description(self):
+        if (desc := extract_info(self.model.readme).info.description):
+            if not desc == '(Add description here)':
+                return desc
+        badattr(self, 'description')
+
+    @cached_property
+    def prompt_format(self):
+        return self.model.base_model.guess_prompt_format()
+
+    def files(self):
+        for mf in self.model.iterfiles(lambda fn: fn.endswith('.gguf')):
             qtype = mf.name.split('.')[-2]
             if '-split-' not in qtype:
-                lname = f'{qm.catalog_name}.{file_format}.{qtype.lower()}'
+                lname = f'{self.model.catalog_name}.{self.file_format}.{qtype.lower()}'
                 yield {
-                    'commitHash': qm.model_info.sha,
+                    'commitHash': self.model.model_info.sha,
                     'isDeprecated': False,
-                    'displayLink' : qm.url + '/',
+                    'displayLink' : self.model.url + '/',
                     'hfPathFromRoot': mf.name,
-                    'fileFormat': file_format,
-                    'hfRepo': qm.repo_id,
+                    'fileFormat': self.file_format,
+                    'hfRepo': self.model.repo_id,
                     'localFilename': lname + '.gguf',
                     'size': mf.size,
-                    'displayName': f'{qm.formal_name} ({qtype})',
+                    'displayName': f'{self.model.formal_name} ({qtype})',
                     'name': lname,
                     'cloudCtxSize': None
                 }
 
-    @staticmethod
-    def generate(qm: hfutil.QuantModel, recommended = False, description = None, prompt_format = False, readable = False) -> dict:
-        if not description:
-            description = extract_info(qm.readme).info.description
-        if not description or description == '(Add description here)':
-            raise ValueError('Description must be set')
-        if prompt_format is False:
-            prompt_format = qm.base_model.guess_prompt_format()
+    def generate(self) -> dict:
         ts = timestamp()
         
         return {
-            'ctxSize': qm.context,
-            'description': description,
-            'displayName': qm.formal_name,
-            'name': qm.catalog_name,
-            'recommended': recommended,
-            'files': list(Manifest.files(qm)),
+            'ctxSize': self.model.context,
+            'description': self.description,
+            'displayName': self.model.formal_name,
+            'name': self.model.catalog_name,
+            'recommended': self.recommended,
+            'files': list(self.files()),
             'featureToNewUsers': False,
             'updatedAt': ts,
             'createdAt': ts,
-            'promptFormat': prompt_format or 'general',
+            'promptFormat': self.prompt_format or 'general',
             'isDefault': True
         }
     
-    @staticmethod
-    def request(qm: hfutil.QuantModel, readable = False, **kwargs):
+    def request(self, readable = False):
         req = {
             '0': {
                 'json': {
-                    'modelFamily': Manifest.generate(qm, **kwargs),
+                    'modelFamily': self.generate(),
                     'isUpdate': False
                 }
             }
         }
         return misc.to_json(req, readable)
     
-    @staticmethod
-    def show(qm: hfutil.QuantModel, readable = True, **kwargs):
-        print(Manifest.request(qm, readable, **kwargs))
+    def show(self, readable = True):
+        print(self.request(readable))
 
