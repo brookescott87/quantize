@@ -11,6 +11,9 @@ _re_special_chars_map = {n:u for n,u in re._special_chars_map.items() if chr(n).
 def re_escape(s:str) -> str:
     return s.translate(_re_special_chars_map)
 
+def badattr(self, attr:str):
+    raise AttributeError(f'{repr(self.__class__)} object has no attribute {repr(attr)}')
+
 class settable_cached_property(cached_property):
     fset: Callable[[Any, Any], None] | None
 

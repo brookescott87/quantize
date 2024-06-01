@@ -10,9 +10,6 @@ from . import misc
 link_rx = re.compile('\[(.*?)]\(((https://[^/]+/)([^/]+/.*))\)$')
 ctx_rx = re.compile('(\d+) tokens$')
 
-def badattr(self, attr:str):
-    raise AttributeError(f'{repr(self.__class__)} object has no attribute {repr(attr)}')
-
 class InfoBlock:
     class Field:
         def __init__(self, name, value):
@@ -147,7 +144,7 @@ class Manifest:
         if (desc := extract_info(self.model.readme).info.description):
             if not desc == '(Add description here)':
                 return desc
-        badattr(self, 'description')
+        misc.badattr(self, 'description')
 
     @cached_property
     def prompt_format(self):
