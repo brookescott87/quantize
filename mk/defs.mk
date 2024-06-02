@@ -12,10 +12,6 @@ ifndef BASEREPO
 $(error BASEREPO is not set)
 endif
 
-AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
-BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
-QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
-
 ifndef TOASTER_ROOT
 $(error TOASTER_ROOT is not set)
 endif
@@ -30,6 +26,10 @@ else
 $(error ORGANIZATION is not set)
 endif
 endif
+
+AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
+BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
+QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 
 mkreadme_opts :=
 mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
