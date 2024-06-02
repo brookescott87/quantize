@@ -229,7 +229,8 @@ class Manifest:
                 'createdAt': ts,
                 'promptFormat': self.prompt_format or 'general',
                 'isDefault': True
-            }
+            },
+            'isUpdate': False
         }
     
     def json(self, readable = False):
