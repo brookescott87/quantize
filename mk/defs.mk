@@ -33,6 +33,7 @@ QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(ORGANIZATION)/$(QUANTMODEL)-GGUF)
 
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),20k_random_data.txt)
+IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
 
 mkreadme_opts :=
 mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
@@ -53,7 +54,7 @@ xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVE
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
-imatrix = $(TOASTER_BIN)/imatrix --chunks $(or $(IMATRIX_CHUNKS),128) -c 128 -m $1 -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
+imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 quantize = $(TOASTER_BIN)/quantize --imatrix $(filter %.imatrix,$1) $(filter %.bin,$1) $2 $3
 
