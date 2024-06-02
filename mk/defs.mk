@@ -78,6 +78,9 @@ $(QUANTS): $(QUANTMODEL).%.gguf:| $(QUANTMODEL).bin $(QUANTMODEL).imatrix
 $(HASHES): %.hash: %
 	sha256sum $< | cut -f1 -d' ' > $@.tmp && mv -f $@.tmp $@
 
+meta.mk: $(QUANTMODEL).bin
+	python $(MAKEDIR)/meta.py $< $@
+
 imatrix_dataset.txt:
 	cp $(imatrix_data) $@
 
@@ -87,9 +90,7 @@ imatrix_dataset.txt:
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
 
-README.md: GNUmakefile
-	rm -f $@
-	$(mkreadme) $(mkreadme_opts) -o $@ $(BASEREPO)
+README.md: GNUmakefile meta.mk
 
 $(source)/$(BASEMODEL):
 	mkdir -p $(@D)
@@ -99,3 +100,11 @@ $(source)/$(BASEMODEL):
 
 clean::
 	$(if $(wildcard *.tmp),rm -f *.tmp)
+
+include meta.mk
+
+ifdef model_paramsize
+README.md:
+	rm -f $@
+	$(mkreadme) $(mkreadme_opts) -o $@ $(BASEREPO)
+endif
