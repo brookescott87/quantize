@@ -30,6 +30,7 @@ endif
 AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
 BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
+QUANTREPO := $(or $(QUANTREPO),$(ORGANIZATION)/$(QUANTMODEL)-GGUF)
 
 mkreadme_opts :=
 mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
