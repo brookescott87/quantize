@@ -238,35 +238,62 @@ class Manifest:
     def show(self, readable = True):
         print(self.json(readable))
 
+class RequestFailed(Exception):
+    def __init__(self, request):
+        self.request = request
+        super().__init__(f'Request failed: {request.reason}')
+
 class Requestor:
     uuid_rx = re.compile('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}')
     cookie_name = '__Secure-next-auth.session-token'
     server = 'hub-uploader-private.faraday.dev'
 
-    def __init__(self, token:str):
-        if self.uuid_rx.fullmatch(token):
-            self.token = token
-        else:
-            raise ValueError('This is not a valid UUID')
-        self.cookie_jar = requests.cookies.RequestsCookieJar()
-        cookie = requests.cookies.create_cookie(self.cookie_name, token, domain=self.server,
-                                                secure=True, discard=False,
-                                                expires=int(dt.now().timestamp()) + 3600*24*30)
-        self.cookie_jar.set_cookie(cookie)
+    def __init__(self, token:str=None):
+        self.cookie_jar = Backyard.cookie_jar
 
-    def request(self, command, data):
-        if isinstance(data,dict):
-            data = misc.to_json(data)
-        payload = '{"0":{"json":%s}}'%(data,)
-        url = f'https://{self.server}/api/trpc/models.{command}?batch=1'
-        r = requests.post(url, payload, cookies=self.cookie_jar)
+        if token:
+            if not self.uuid_rx.fullmatch(token):
+                raise ValueError('This is not a valid UUID')
+            self.cookie_jar.clear()
+            cookie = requests.cookies.create_cookie(self.cookie_name, token, domain=self.server,
+                                                    secure=True, discard=False,
+                                                    expires=int(dt.now().timestamp()) + 3600*24*30)
+            self.cookie_jar.set_cookie(cookie)
+            self.cookie_jar.save()
+
+    def request(self, command, params=None, get=None, post=None, **kwargs_):
+        kwargs = {'params': {'batch': 1}, 'cookies': self.cookie_jar}
+        if params:
+            kwargs['params'].update(params)
+        kwargs.update(kwargs_)
+
+        if bool(get) ^ bool(post):
+            if isinstance(data := get or post, dict):
+                data = {0: {'json': get or post}}
+                if get:
+                    func = requests.get
+                    kwargs['params']['input'] = misc.to_json(data)
+                else:
+                    func = requests.post
+                    kwargs['json'] = data
+            else:
+                raise ValueError('get or post parameter must be a dict')
+        else:
+            raise ValueError('cannot specify both get and post')
+
+        url = f'https://{self.server}/api/trpc/models.{command}'
+        r = func(url, **kwargs)
         if r.ok:
+            self.cookie_jar.save()
             return r.json()
-        raise RuntimeError(f'Request failed: {r.reason}')
+        raise RequestFailed(r)
     
+    def get_models(self, only_non_gguf:bool):
+        return self.request('getModels', get={'onlyNonGGUF': only_non_gguf})
+
     def get_last_commit(self, model_id):
         data = {'url': f'https://huggingface.co/{model_id}'}
-        return self.request('getLastCommit', data)
+        return self.request('getLastCommit', post=data)
 
     def submit(self, manifest: Manifest):
-        return self.request('addPendingApproval', manifest.json())
+        return self.request('addPendingApproval', post=manifest.generate())
