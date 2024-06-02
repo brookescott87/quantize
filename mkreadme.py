@@ -52,6 +52,8 @@ def main():
                         help='Model creation date')
     parser.add_argument('--description', '--desc', '-s', type=str, default='(Add description here)',
                         help='Model description')
+    parser.add_argument('--param-size', '-p', type=int,
+                        help='Number of parameters in the model')
     parser.add_argument('--standalone', '-S', action='store_true',
                         help='Not a HuggingFace model')
     args = parser.parse_args()
@@ -122,6 +124,8 @@ def main():
     card_data.quantized_by = 'brooketh'
     card_data.widget = None
     card_data.eval_results = None
+    if args.param_size:
+        card_data.parameter_count = args.param_size
 
     args.metadata = card_data.to_yaml()
 

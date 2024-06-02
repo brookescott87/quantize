@@ -99,8 +99,14 @@ clean::
 
 include meta.mk
 
+ifndef PARAMSIZE
 ifdef model_paramsize
+PARAMSIZE := $(model_paramsize)
+endif
+endif
+
+ifdef PARAMSIZE
 README.md:
 	rm -f $@
-	$(mkreadme) $(mkreadme_opts) -o $@ $(BASEREPO)
+	$(mkreadme) -p $(PARAMSIZE) $(mkreadme_opts) -o $@ $(BASEREPO)
 endif
