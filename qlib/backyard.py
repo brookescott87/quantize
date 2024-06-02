@@ -1,5 +1,4 @@
 import re
-import sysconfig
 from pathlib import Path
 import json
 from dataclasses import dataclass
@@ -19,13 +18,12 @@ ctx_rx = re.compile('(\d+) tokens$')
 class Backyard:
     @cached_property
     def backyard_dir(self):
-        if local_dir := sysconfig.get_config_var('userbase'):
-            backyard_dir = Path(local_dir) / 'backyard'
-            if not backyard_dir.exists():
-                backyard_dir.mkdir(parents = True)
-            return backyard_dir
+        if (d := Path('~/.cache/backyard').expanduser()).exists():
+            if not d.is_dir():
+                raise RuntimeError(f'{d} is not a directory')
         else:
-            raise RuntimeError('No Python userbase')
+            d.mkdir(parents = True)
+        return d
 
     @cached_property
     def cookie_jar(self):
