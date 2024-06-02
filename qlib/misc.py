@@ -14,6 +14,8 @@ def re_escape(s:str) -> str:
 def badattr(self, attr:str):
     raise AttributeError(f'{repr(self.__class__)} object has no attribute {repr(attr)}')
 
+singleton = lambda c: c()
+
 class settable_cached_property(cached_property):
     fset: Callable[[Any, Any], None] | None
 
