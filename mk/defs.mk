@@ -52,7 +52,8 @@ convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--fallback-pre=$(PRETOK
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
-imatrix = $(TOASTER_BIN)/imatrix --chunks $(or $(IMATRIX_CHUNKS),128) -c 128 -m $(filter %.bin,$1) -f $(filter %.txt,$1) -o $2.tmp && mv $2.tmp $2
+imatrix_input := imatrix_dataset.txt
+imatrix = $(TOASTER_BIN)/imatrix --chunks $(or $(IMATRIX_CHUNKS),128) -c 128 -m $1 -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 quantize = $(TOASTER_BIN)/quantize --imatrix $(filter %.imatrix,$1) $(filter %.bin,$1) $2 $3
 
@@ -76,11 +77,11 @@ $(HASHES): %.hash: %
 meta.mk: $(QUANTMODEL).bin
 	python $(MAKEDIR)/meta.py $< $@
 
-imatrix_dataset.txt:
+$(imatrix_input):
 	cp $(imatrix_data) $@
 
-%.imatrix: | %.bin imatrix_dataset.txt
-	$(call imatrix,$|,$@)
+%.imatrix: | %.bin $(imatrix_input)
+	$(call imatrix,$*.bin,$@)
 
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
