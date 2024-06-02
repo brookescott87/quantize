@@ -1,4 +1,7 @@
 import re
+import sysconfig
+from pathlib import Path
+import json
 from dataclasses import dataclass
 from functools import cached_property
 from operator import attrgetter
@@ -7,9 +10,40 @@ from datetime import datetime as dt, UTC
 import requests
 from . import hfutil
 from . import misc
+from .misc import singleton
 
 link_rx = re.compile('\[(.*?)]\(((https://[^/]+/)([^/]+/.*))\)$')
 ctx_rx = re.compile('(\d+) tokens$')
+
+@singleton
+class Backyard:
+    @cached_property
+    def backyard_dir(self):
+        if local_dir := sysconfig.get_config_var('userbase'):
+            backyard_dir = Path(local_dir) / 'backyard'
+            if not backyard_dir.exists():
+                backyard_dir.mkdir(parents = True)
+            return backyard_dir
+        else:
+            raise RuntimeError('No Python userbase')
+
+    @cached_property
+    def cookie_jar(self):
+        cookie_jar_path = self.backyard_dir / 'cookie.jar'
+        if cookie_jar_path.exists():
+            with cookie_jar_path.open('rt') as f:
+                jar = requests.cookies.cookiejar_from_dict(json.load(f))
+        else:
+            jar = requests.cookies.RequestsCookieJar()
+        jar.save_file = cookie_jar_path
+
+        return jar
+
+def save_cookie_jar(jar):
+    with jar.save_file.open('wt', encoding='utf-8') as f:
+        f.write(misc.to_json(jar.get_dict()))
+
+requests.cookies.RequestsCookieJar.save = save_cookie_jar
 
 class InfoBlock:
     class Field:
