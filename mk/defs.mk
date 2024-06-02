@@ -12,17 +12,9 @@ ifndef BASEREPO
 $(error BASEREPO is not set)
 endif
 
-ifndef AUTHOR
-AUTHOR := $(firstword $(subst /, ,$(BASEREPO)))
-endif
-
-ifndef BASEMODEL
-BASEMODEL := $(notdir $(BASEREPO))
-endif
-
-ifndef QUANTMODEL
-QUANTMODEL := $(notdir $(abspath .))
-endif
+AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
+BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
+QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 
 ifndef TOASTER_ROOT
 $(error TOASTER_ROOT is not set)
