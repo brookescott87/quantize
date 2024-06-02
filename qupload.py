@@ -43,6 +43,7 @@ def main():
     parser.add_argument('--initialize', '-i', action='store_true', help="Create new if doesn't exist") 
     parser.add_argument('--retries', '-r', type=int, default=0, help='Number of times to retry')
     parser.add_argument('--only_shards', '-S', action='store_true', help='Only shards')
+    parser.add_argument('--everything', '-E', action='store_true', help='Upload everything (USE WITH CAUTION!)')
     parser.add_argument('--ggufs', '-g', action=qlib.misc.BooleanOptionalAction, default=True, help='Include GGUFs in upload')
     parser.add_argument('--upload', '-u', action=qlib.misc.BooleanOptionalAction, default=True, help='Perform the upload')
     parser.add_argument('--keep-oversize', '--keep', '-k', action='store_true', help='Keep oversize GGUFs after splitting')
@@ -57,12 +58,17 @@ def main():
     gguf_pattern = '*.gguf'
     shard_pattern = '*-split-?????-of-?????.gguf'
 
-    ignore_patterns = []
+    ignore_patterns = [
+        '*.sha256'
+    ]
     
     qdir = args.directory.absolute()
 
     if not qdir.is_dir():
         raise ValueError(f'"{qdir}" is not a directory.')
+
+    if args.everything:
+        allow_patterns = [ '*' ]
 
     if args.ggufs:
         if args.only_shards:
