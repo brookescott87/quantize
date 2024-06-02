@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from functools import cached_property
+from operator import attrgetter
 from typing import List,Tuple
 from datetime import datetime as dt, UTC
 import requests
@@ -150,24 +151,33 @@ class Manifest:
     def prompt_format(self):
         return self.model.base_model.guess_prompt_format()
 
+    def nonsplitggufs(self):
+        for mf in self.model.files:
+            if mf.name.endswith('.gguf'):
+                qtype = mf.name.split('.')[-2]
+                if '-split-' not in qtype:
+                    mf.qtype = qtype
+                    yield mf
+
     def files(self):
-        for mf in self.model.iterfiles(lambda fn: fn.endswith('.gguf')):
-            qtype = mf.name.split('.')[-2]
-            if '-split-' not in qtype:
-                lname = f'{self.model.catalog_name}.{self.file_format}.{qtype.lower()}'
-                yield {
-                    'commitHash': self.model.model_info.sha,
-                    'isDeprecated': False,
-                    'displayLink' : self.model.url + '/',
-                    'hfPathFromRoot': mf.name,
-                    'fileFormat': self.file_format,
-                    'hfRepo': self.model.repo_id,
-                    'localFilename': lname + '.gguf',
-                    'size': mf.size,
-                    'displayName': f'{self.model.formal_name} ({qtype})',
-                    'name': lname,
-                    'cloudCtxSize': None
-                }
+        flist = sorted(self.nonsplitggufs(), key=attrgetter('size'))
+        for filter in ('Q','IQ','F','BF'):
+            for mf in flist:
+                if mf.qtype.startswith(filter):
+                    lname = f'{self.model.catalog_name}.{self.file_format}.{mf.qtype.lower()}'
+                    yield {
+                        'commitHash': self.model.model_info.sha,
+                        'isDeprecated': False,
+                        'displayLink' : self.model.url + '/',
+                        'hfPathFromRoot': mf.name,
+                        'fileFormat': self.file_format,
+                        'hfRepo': self.model.repo_id,
+                        'localFilename': lname + '.gguf',
+                        'size': mf.size,
+                        'displayName': f'{self.model.formal_name} ({mf.qtype})',
+                        'name': lname,
+                        'cloudCtxSize': None
+                    }
 
     def generate(self) -> dict:
         ts = timestamp()
