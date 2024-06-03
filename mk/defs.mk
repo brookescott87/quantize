@@ -49,7 +49,6 @@ IQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(IQTYPES))
 KQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(KQTYPES))
 QUANTS := $(IQUANTS) $(KQUANTS)
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
-HASHES := $(patsubst %,%.hash,$(QUANTS))
 
 convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--fallback-pre=$(PRETOKENIZER))
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
@@ -66,7 +65,6 @@ imat:: $(QUANTMODEL).imatrix
 quants:: assets bin imat
 quants:: $(QUANTS)
 assets:: $(ASSETS) README.md
-hashes:: $(HASHES)
 
 $(QUANTMODEL).bin: | $(source)/$(BASEMODEL)
 	$(call convert,$|,$(FTYPE),$@)
@@ -78,9 +76,6 @@ $(IQUANTS): %.gguf:
 
 $(KQUANTS): %.gguf:
 	$(call quantize,$*.bin,$@)
-
-$(HASHES): %.hash: %
-	sha256sum $< | cut -f1 -d' ' > $@.tmp && mv -f $@.tmp $@
 
 meta.mk: $(QUANTMODEL).bin
 	python $(MAKEDIR)/meta.py $< $@
