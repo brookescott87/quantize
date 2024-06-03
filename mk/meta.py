@@ -14,11 +14,15 @@ def main():
 
     input = GGUFReader(args.gguf)
     paramsize = sum(t.n_elements for t in input.tensors)
+    bytesperblock = sum(t.n_bytes for t in input.tensors if t.name.startswith('blk.0.'))
+    gpulayers = int(bytesperblock / 22683222016)
 
     with args.outfile.open('wt') as output:
         output.write(f'''# generated from {args.gguf}
 
 model_paramsize := {paramsize}
+model_bytesperblock := {bytesperblock}
+model_gpulayers := {gpulayers}
 
 # end of metadata
 ''')
