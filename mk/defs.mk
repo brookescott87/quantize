@@ -72,10 +72,10 @@ $(QUANTMODEL).bin: | $(source)/$(BASEMODEL)
 $(QUANTS):| $(QUANTMODEL).bin $(QUANTMODEL).imatrix
 
 $(IQUANTS): %.gguf:
-	$(call quantize,--imatrix $*.imatrix $*.bin,$@)
+	$(call quantize,--imatrix $(QUANTMODEL).imatrix $(QUANTMODEL).bin,$@)
 
 $(KQUANTS): %.gguf:
-	$(call quantize,$*.bin,$@)
+	$(call quantize,$(QUANTMODEL).bin,$@)
 
 meta.mk: $(QUANTMODEL).bin
 	python $(MAKEDIR)/meta.py $< $@
