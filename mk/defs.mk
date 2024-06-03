@@ -40,12 +40,14 @@ mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
 mkreadme_opts += $(if $(AUTHOR),--author $(AUTHOR))
 mkreadme_opts += $(if $(FULLNAME),--title $(FULLNAME))
 
+IQTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M IQ3_XXS IQ3_XS IQ3_S IQ3_M IQ4_XS
+KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 
-QTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M Q2_K_S Q2_K
-QTYPES += IQ3_XXS IQ3_XS Q3_K_S IQ3_S IQ3_M Q3_K_M Q3_K_L IQ4_XS
-QTYPES += Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
+qtype = $(patsubst $(QUANTMODEL).%.gguf,%,$1)
 
-QUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(QTYPES))
+IQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(IQTYPES))
+KQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(KQTYPES))
+QUANTS := $(IQUANTS) $(KQUANTS)
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 HASHES := $(patsubst %,%.hash,$(QUANTS))
 
@@ -56,7 +58,7 @@ imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
 imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
-quantize = $(TOASTER_BIN)/quantize --imatrix $(filter %.imatrix,$1) $(filter %.bin,$1) $2 $3
+quantize = $(TOASTER_BIN)/quantize $1 $2 $(call qtype,$2)
 
 all:: quants
 bin:: $(QUANTMODEL).bin
@@ -69,8 +71,13 @@ hashes:: $(HASHES)
 $(QUANTMODEL).bin: | $(source)/$(BASEMODEL)
 	$(call convert,$|,$(FTYPE),$@)
 
-$(QUANTS): $(QUANTMODEL).%.gguf:| $(QUANTMODEL).bin $(QUANTMODEL).imatrix
-	$(call quantize,$|,$@,$*)
+$(QUANTS):| $(QUANTMODEL).bin $(QUANTMODEL).imatrix
+
+$(IQUANTS): %.gguf:
+	$(call quantize,--imatrix $*.imatrix $*.bin,$@)
+
+$(KQUANTS): %.gguf:
+	$(call quantize,$*.bin,$@)
 
 $(HASHES): %.hash: %
 	sha256sum $< | cut -f1 -d' ' > $@.tmp && mv -f $@.tmp $@
