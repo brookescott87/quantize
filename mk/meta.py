@@ -15,7 +15,7 @@ def main():
     input = GGUFReader(args.gguf)
     paramsize = sum(t.n_elements for t in input.tensors)
     bytesperblock = sum(t.n_bytes for t in input.tensors if t.name.startswith('blk.0.'))
-    gpulayers = int(bytesperblock / 22683222016)
+    gpulayers = int(22683222016 / bytesperblock)
 
     with args.outfile.open('wt') as output:
         output.write(f'''# generated from {args.gguf}
