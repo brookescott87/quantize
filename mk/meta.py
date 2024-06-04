@@ -2,30 +2,63 @@
 
 from pathlib import Path
 from gguf.gguf_reader import GGUFReader
+import json
 import argparse
+
+def convert_num(s:str) -> float|None:
+    if s:
+        mult = 1
+        if (u := s[-1]).isalpha():
+            s = s[:-1]
+            match u.lower():
+                case 'k': mult=1024
+                case 'm': mult=1024*1024
+                case 'g': mult=1024*1024*1024
+                case _:
+                    raise ValueError(f'Invalid suffix {u}')
+        value = float(s)
+        return value * mult
+    else:
+        return 0
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--description', '-d', type=str, default=None,
+                        help='Set description')
+    parser.add_argument('--gpu-memory', type=str, default=None,
+                        help='amount of memory in the gpu')
+    parser.add_argument('json', type=Path,
+                        help='File to write meta to')
     parser.add_argument('gguf', type=Path,
                         help='GGUF file to inspect')
-    parser.add_argument('outfile', type=Path,
-                        help='File to write meta to')
     args = parser.parse_args()
 
+    gpu_memory = convert_num(args.gpu_memory)
+
+    if args.json.exists():
+        with args.json.open('rt') as f:
+            meta = json.load(f)
+    else:
+        meta = dict()
+
+    if args.description:
+        meta['description'] = args.description
+    
     input = GGUFReader(args.gguf)
-    paramsize = sum(t.n_elements for t in input.tensors)
-    bytesperblock = sum(t.n_bytes for t in input.tensors if t.name.startswith('blk.0.'))
-    gpulayers = int(22683222016 / bytesperblock)
+    paramsize = 0
+    parambytes = 0
+    lastgpublock = None
+    for t in input.tensors:
+        paramsize += t.n_elements
+        parambytes += t.n_bytes
+        if t.name.startswith('blk.') and gpu_memory > parambytes:
+            lastgpublock = t.name
+    meta['paramsize'] = paramsize
+    if lastgpublock:
+        meta['gpulayers'] = int(lastgpublock.split('.')[1])
 
-    with args.outfile.open('wt') as output:
-        output.write(f'''# generated from {args.gguf}
-
-model_paramsize := {paramsize}
-model_bytesperblock := {bytesperblock}
-model_gpulayers := {gpulayers}
-
-# end of metadata
-''')
+    with args.json.open('wt') as f:
+        json.dump(f, indent=4)
 
 if __name__ == '__main__':
     main()
