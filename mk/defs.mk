@@ -77,8 +77,8 @@ $(IQUANTS): %.gguf:
 $(KQUANTS): %.gguf:
 	$(call quantize,$(QUANTMODEL).bin,$@)
 
-meta.mk: $(QUANTMODEL).bin
-	python $(MAKEDIR)/meta.py $@ $<
+_meta.json: $(QUANTMODEL).bin
+	python $(MAKEDIR)/meta.py $(META_OPTS) $@ $<
 
 $(imatrix_input):
 	cp $(imatrix_data) $@
@@ -89,7 +89,7 @@ $(imatrix_input):
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
 
-README.md: meta.json GNUmakefile
+README.md: _meta.json GNUmakefile
 	rm -f $@
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
 

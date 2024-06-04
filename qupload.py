@@ -59,7 +59,8 @@ def main():
     shard_pattern = '*-split-?????-of-?????.gguf'
 
     ignore_patterns = [
-        '*.sha256'
+        '*.sha256',
+        '_*'
     ]
     
     qdir = args.directory.absolute()

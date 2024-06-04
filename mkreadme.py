@@ -17,6 +17,8 @@ image_files = (assets_dir / 'BackyardAI_Banner.png',
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
 
+default_description='(Add description here)'
+
 def get_model_id(p: Path) -> RepoPath:
     if not p.exists():
         raise ValueError(f'{p} does not exist')
@@ -50,12 +52,14 @@ def main():
     parser.add_argument('--date', '-d',
                         type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d').date(),
                         help='Model creation date')
-    parser.add_argument('--description', '--desc', '-s', type=str, default='(Add description here)',
+    parser.add_argument('--description', '--desc', '-s', type=str,
                         help='Model description')
-    parser.add_argument('--param-size', '-p', type=int,
+    parser.add_argument('--paramsize', '-p', type=int,
                         help='Number of parameters in the model')
     parser.add_argument('--standalone', '-S', action='store_true',
                         help='Not a HuggingFace model')
+    parser.add_argument('--meta', '-m', type=Path,
+                        help='meta file')
     args = parser.parse_args()
 
     if args.file:
@@ -98,6 +102,17 @@ def main():
             else:
                 sys.stderr.write("Warning: model name not set in base model's metadata\n")
 
+    if args.meta:
+        with args.meta.open('rt', encoding='utf-8') as f:
+            meta = json.load(f)
+        argsd = args.__dict__
+        for k,v in meta.items():
+            if v and k in argsd and not argsd[k]:
+                argsd[k] = v
+
+    if not args.description:
+        args.description = default_description
+
     if not args.author:
         args.author = model_info.author
     # if not args.name:
@@ -124,8 +139,8 @@ def main():
     card_data.quantized_by = 'brooketh'
     card_data.widget = None
     card_data.eval_results = None
-    if args.param_size:
-        card_data.parameter_count = args.param_size
+    if args.paramsize:
+        card_data.parameter_count = args.paramsize
 
     args.metadata = card_data.to_yaml()
 
