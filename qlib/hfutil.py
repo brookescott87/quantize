@@ -104,8 +104,8 @@ class Uploader(object):
         self.total_retries += retries
         return finished
 
-def list_models():
-    return [m.id for m in hfapi.list_models(author=organization) if not m.private]
+def list_models(private=False):
+    return [m.id for m in hfapi.list_models(author=organization) if private or not m.private]
 
 @dataclass
 class ModelFile:
