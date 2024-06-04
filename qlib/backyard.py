@@ -182,6 +182,18 @@ class Manifest:
     @cached_property
     def prompt_format(self):
         return self.model.base_model.guess_prompt_format()
+    
+    @cached_property
+    def catalog_name(self):
+        return self.model.catalog_name
+    
+    @cached_property
+    def formal_name(self):
+        return self.model.formal_name
+    
+    @cached_property
+    def context_size(self):
+        return self.model.context
 
     def nonsplitggufs(self):
         for mf in self.model.files:
@@ -196,7 +208,7 @@ class Manifest:
         for filter in ('Q','IQ','F','BF'):
             for mf in flist:
                 if mf.qtype.startswith(filter):
-                    lname = f'{self.model.catalog_name}.{self.file_format}.{mf.qtype.lower()}'
+                    lname = f'{self.catalog_name}.{self.file_format}.{mf.qtype.lower()}'
                     yield {
                         'commitHash': self.model.model_info.sha,
                         'isDeprecated': False,
@@ -206,7 +218,7 @@ class Manifest:
                         'hfRepo': self.model.repo_id,
                         'localFilename': lname + '.gguf',
                         'size': mf.size,
-                        'displayName': f'{self.model.formal_name} ({mf.qtype})',
+                        'displayName': f'{self.formal_name} ({mf.qtype})',
                         'name': lname,
                         'cloudCtxSize': None
                     }
@@ -216,10 +228,10 @@ class Manifest:
         
         return {
             'modelFamily': {
-                'ctxSize': self.model.context,
+                'ctxSize': self.context_size,
                 'description': self.description,
-                'displayName': self.model.formal_name,
-                'name': self.model.catalog_name,
+                'displayName': self.formal_name,
+                'name': self.catalog_name,
                 'recommended': self.recommended,
                 'files': list(self.files()),
                 'featureToNewUsers': False,
