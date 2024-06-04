@@ -36,7 +36,7 @@ def main():
     gpu_memory = convert_num(args.gpu_memory)
 
     if args.json.exists():
-        with args.json.open('rt') as f:
+        with args.json.open('rt', encoding='utf-8') as f:
             meta = json.load(f)
     else:
         meta = dict()
@@ -57,8 +57,8 @@ def main():
     if lastgpublock:
         meta['gpulayers'] = int(lastgpublock.split('.')[1])
 
-    with args.json.open('wt') as f:
-        json.dump(f, indent=4)
+    with args.json.open('wt', encoding='utf-8') as f:
+        json.dump(meta, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
     main()
