@@ -57,6 +57,7 @@ imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
 imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
+qupload := python $(SCRIPTDIR)/qupload.py
 quantize = $(TOASTER_BIN)/quantize $1 $2 $(call qtype,$2)
 
 all:: quants
@@ -102,3 +103,5 @@ $(source)/$(BASEMODEL):
 clean::
 	$(if $(wildcard *.tmp),rm -f *.tmp)
 
+upload::
+	$(qupload) -i -p .
