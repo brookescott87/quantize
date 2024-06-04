@@ -47,6 +47,7 @@ def main():
     parser.add_argument('--ggufs', '-g', action=qlib.misc.BooleanOptionalAction, default=True, help='Include GGUFs in upload')
     parser.add_argument('--upload', '-u', action=qlib.misc.BooleanOptionalAction, default=True, help='Perform the upload')
     parser.add_argument('--keep-oversize', '--keep', '-k', action='store_true', help='Keep oversize GGUFs after splitting')
+    parser.add_argument('--publish', '-p', action='store_true', help='Make repository public after upload')
     args = parser.parse_args()
 
     allow_patterns = [
@@ -94,6 +95,13 @@ def main():
                                                      uploader.elapsed,
                                                      retries := uploader.total_retries,
                                                      'y' if retries == 1 else 'ies'))
+        if not success:
+            return
+
+    if args.publish:
+        ri = qlib.hfapi.repo_info(repo_id)
+        if ri.private:
+            qlib.hfapi.update_repo_visibility(repo_id, private = False)
 
 if __name__ == '__main__':
     main()
