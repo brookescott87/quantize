@@ -29,6 +29,8 @@ endif
 
 #imatrix_default_dataset := 20k_random_data.txt
 imatrix_default_dataset := groups_merged.txt
+#default_ftype := auto
+default_ftype := f32
 
 AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
 BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
@@ -47,6 +49,8 @@ IQTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M IQ3_XXS IQ3_XS IQ3_S IQ3_M IQ4
 KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 
 qtype = $(patsubst $(QUANTMODEL).%.gguf,%,$1)
+
+FTYPE := $(or $(FTYPE),$(default_ftype))
 
 IQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(IQTYPES))
 KQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(KQTYPES))
