@@ -158,7 +158,10 @@ class Model(ProxyObject):
     def owner(self): return self.repo_id.split('/')[0]
 
     @cached_property
-    def model_name(self): return self.repo_id.split('/')[-1]
+    def repo_name(self): return self.repo_id.split('/')[-1]
+
+    @property
+    def model_name(self): return self.repo_name
 
     @property
     def repo_id(self): return self._repo_id
@@ -177,6 +180,22 @@ class Model(ProxyObject):
     def download(self):
         return Path(hfapi.snapshot_download(repo_id=self.repo_id))
 
+    @cached_property
+    def catalog_name(self):
+        psize,parts = self.parse_param_size()
+        name = '-'.join(parts)
+        return f'{self.model_type}.{psize}b.{name}'.lower()
+
+    @cached_property
+    def formal_name(self):
+        psize,parts = self.parse_param_size()
+        name = ' '.join([p[0].upper()+p[1:] for p in parts])
+        return f'{name} {psize}B'
+
+    @cached_property
+    def num_params(self):
+        return self.card_data and self.card_data.get('parameter_count') or self.calculated_params
+
     def __new__(cls, repo_id:str):
         if repo_id:
             if '/' not in repo_id:
@@ -194,7 +213,27 @@ class Model(ProxyObject):
             return obj
         else:
             return None
-        
+
+    def parse_param_size(self):
+        if nexperts := self.num_experts:
+            nexperts = f'{nexperts}x'
+        nparams = self.num_params / 1e9
+        bparams = round(nparams)
+        perr = nparams / 10
+        pstr = (nexperts or '') + str(bparams)
+        mstr = None
+        for p in (parts := self.model_name.split('-')):
+            if not p == mstr:
+                if m := paramsize_rx.match(p):
+                    if m.group(2) == nexperts:
+                        if nerr := abs(nparams - float(m.group(3))) < perr:
+                            perr = nerr
+                            pstr = m.group(1)
+                            mstr = p
+        if mstr:
+            parts = [p for p in parts if not p == mstr]
+        return (pstr,parts)
+
     @staticmethod
     def calc_params(blocks, embeds, ffs, heads, kvs, vocabs):
         if heads % kvs:
@@ -221,7 +260,7 @@ class BaseModel(Model):
         return self.read_json('tokenizer_config.json')
 
     @cached_property
-    def num_params(self):
+    def calculated_params(self):
         if config := self.config:
             blocks = config['num_hidden_layers']
             embeds = config['hidden_size']
@@ -249,18 +288,6 @@ class BaseModel(Model):
     @cached_property
     def num_experts(self): return self.config.get('num_local_experts')
 
-    @cached_property
-    def catalog_name(self):
-        psize,parts = self.parse_param_size()
-        name = '-'.join(parts)
-        return f'{self.model_type}.{psize}b.{name}'.lower()
-
-    @cached_property
-    def formal_name(self):
-        psize,parts = self.parse_param_size()
-        name = ' '.join([p[0].upper()+p[1:] for p in parts])
-        return f'{name} {psize}B'
-
     def guess_prompt_format(self):
         bos,eos = [self.tokenizer_config.get(k) for k in ('bos_token','eos_token')]
 
@@ -277,25 +304,6 @@ class BaseModel(Model):
 
         return None
 
-    def parse_param_size(self):
-        if nexperts := self.num_experts:
-            nexperts = f'{nexperts}x'
-        nparams = self.num_params / 1e9
-        bparams = round(nparams)
-        perr = nparams / 10
-        pstr = (nexperts or '') + str(bparams)
-        mstr = None
-        for p in (parts := self.model_name.split('-')):
-            if not p == mstr:
-                if m := paramsize_rx.match(p):
-                    if m.group(2) == nexperts:
-                        if nerr := abs(nparams - float(m.group(3))) < perr:
-                            perr = nerr
-                            pstr = m.group(1)
-                            mstr = p
-        if mstr:
-            parts = [p for p in parts if not p == mstr]
-        return (pstr,parts)
 
 class QuantModel(Model):
     class proxy_property:
@@ -304,6 +312,10 @@ class QuantModel(Model):
 
         def __call__(self, qm):
             return self.cp.func(qm.base_model)
+
+    @property
+    def model_name(self):
+        return self.base_model.model_name
 
     @cached_property
     def base_model(self):
