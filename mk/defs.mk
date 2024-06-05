@@ -27,12 +27,15 @@ $(error ORGANIZATION is not set)
 endif
 endif
 
+#imatrix_default_dataset := 20k_random_data.txt
+imatrix_default_dataset := groups_merged.txt
+
 AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
 BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(ORGANIZATION)/$(QUANTMODEL)-GGUF)
 
-IMATRIX_DATASET := $(or $(IMATRIX_DATASET),20k_random_data.txt)
+IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
 IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
 
 mkreadme_opts :=
