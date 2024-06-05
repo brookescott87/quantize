@@ -75,7 +75,7 @@ quants:: $(QUANTS)
 assets:: $(ASSETS) README.md
 
 $(QUANTMODEL).bin: | $(source)/$(BASEMODEL)
-	$(call convert,$|,$(FTYPE),$@)
+	test -f $@ || $(call convert,$|,$(FTYPE),$@)
 
 $(QUANTS):| $(QUANTMODEL).bin $(QUANTMODEL).imatrix
 
