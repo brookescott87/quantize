@@ -35,7 +35,7 @@ default_ftype := f32
 AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
 BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
-QUANTREPO := $(or $(QUANTREPO),$(ORGANIZATION)/$(QUANTMODEL)-GGUF)
+QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
 IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
@@ -111,4 +111,4 @@ clean::
 	$(if $(wildcard *.tmp),rm -f *.tmp)
 
 upload::
-	$(qupload) -i -p .
+	$(qupload) -i -p -R $(QUANTREPO) .
