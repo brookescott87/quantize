@@ -247,7 +247,7 @@ class Manifest:
                         'cloudCtxSize': None
                     }
 
-    def generate(self) -> dict:
+    def generate(self, summary=False) -> dict:
         ts = timestamp()
         
         return {
@@ -257,7 +257,7 @@ class Manifest:
                 'displayName': self.formal_name,
                 'name': self.catalog_name,
                 'recommended': self.recommended,
-                'files': list(self.files()),
+                'files': [] if summary else list(self.files()),
                 'featureToNewUsers': False,
                 'updatedAt': ts,
                 'createdAt': ts,
@@ -267,11 +267,14 @@ class Manifest:
             'isUpdate': False
         }
     
-    def json(self, readable = False):
-        return misc.to_json(self.generate(), readable)
+    def json(self, readable = False, summary = False) -> str:
+        return misc.to_json(self.generate(summary), readable)
     
-    def show(self, readable = True):
-        print(self.json(readable))
+    def show(self, readable = True, summary = False):
+        print(self.json(readable, summary))
+
+    def summary(self, readable = True):
+        self.show(readable, True)
 
 class RequestFailed(Exception):
     def __init__(self, request):
