@@ -18,10 +18,15 @@ def main():
     script_path = Path(sys.argv[0])
     top = script_path.parent
 
+    if qbr := os.getenv('QUANTIZE_BUILD_ROOT'):
+        quantize_build_root = Path(qbr)
+    else:
+        quantize_build_root = top/'build'
+
     parser = argparse.ArgumentParser(prog=os.getenv('PROGRAM'))
     parser.add_argument('basemodel', type=str,
                         help='Base model to be quantized')
-    parser.add_argument('--build-root', '-b', type=Path, default=top/'build',
+    parser.add_argument('--build-root', '-b', type=Path, default=quantize_build_root,
                         help='Build directory')
     parser.add_argument('--affix', '-a', type=str, default='',
                         help='Local affix to model name')
@@ -46,7 +51,11 @@ def main():
     makefile = quantmodel_dir / 'GNUmakefile'
 
     mk_dir = top / 'mk'
-    defs_mk = relpath(mk_dir/'defs.mk', quantmodel_dir)
+    defs_mk = mk_dir/'defs.mk'
+    if quantmodel_dir.is_absolute():
+        defs_mk = defs_mk.absolute()
+    else:
+        defs_mk = relpath(defs_mk, quantmodel_dir)
     basemodel_dir = quantmodel_dir / 'basemodel'
     basemodel_id = basemodel_dir / 'model-id.txt'
     basemodel_link = basemodel_dir / basemodel.model_name
