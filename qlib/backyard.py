@@ -261,6 +261,7 @@ class Requestor:
 
     def __init__(self, token:str=None):
         self.cookie_jar = Backyard.cookie_jar
+        self.r = None
 
         if token:
             if not self.uuid_rx.fullmatch(token):
@@ -293,7 +294,7 @@ class Requestor:
             raise ValueError('cannot specify both get and post')
 
         url = f'https://{self.server}/api/trpc/models.{command}'
-        r = func(url, **kwargs)
+        self.r = r = func(url, **kwargs)
         if r.ok:
             self.cookie_jar.save()
             return r.json()
