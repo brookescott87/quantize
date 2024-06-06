@@ -203,6 +203,25 @@ class Manifest:
                     mf.qtype = qtype
                     yield mf
 
+    def files1(self):
+        filter = ('Q3_K_L', 'Q3_K_M', 'Q4_K_M', 'Q4_K_S', 'Q5_K_M', 'Q5_K_S', 'Q6_K')
+        flist = sorted([mf for mf in self.nonsplitggufs() if mf.qtype in filter], key=attrgetter('qtype'))
+        for mf in flist:
+            lname = f'{self.catalog_name}.{self.file_format}.{mf.qtype.lower()}'
+            yield {
+                'commitHash': self.model.model_info.sha,
+                'isDeprecated': False,
+                'displayLink' : self.model.url + '/',
+                'hfPathFromRoot': mf.name,
+                'fileFormat': self.file_format,
+                'hfRepo': self.model.repo_id,
+                'localFilename': lname + '.gguf',
+                'size': mf.size,
+                'displayName': f'{self.formal_name} ({mf.qtype})',
+                'name': lname,
+                'cloudCtxSize': None
+            }
+
     def files(self):
         flist = sorted(self.nonsplitggufs(), key=attrgetter('size'))
         for filter in ('Q','IQ','F','BF'):
