@@ -154,7 +154,7 @@ def read_description(model: hfutil.Model) -> str:
     return None
 
 def timestamp(t: dt=None):
-    return dt.strftime(t or dt.now(tz=UTC),'%Y-%m-%dT%H:%M:%S.%f')[:-3]
+    return dt.strftime(t or dt.now(tz=UTC),'%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
 
 class Manifest:
