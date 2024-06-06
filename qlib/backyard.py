@@ -160,7 +160,8 @@ def timestamp(t: dt=None):
 class Manifest:
     file_format:str = 'gguf_v2'
 
-    def __init__(self, model:hfutil.QuantModel, recommended:bool=None, description:str = None, prompt_format:str = None):
+    def __init__(self, model:hfutil.QuantModel, recommended:bool=None, description:str = None, prompt_format:str = None,
+                 catalog_name=None, formal_name=None):
         self.model = model
         if recommended is not None:
             self.recommended = recommended
@@ -168,6 +169,10 @@ class Manifest:
             self.description = description
         if prompt_format is not None:
             self.prompt_format = prompt_format
+        if catalog_name:
+            self.catalog_name = catalog_name
+        if formal_name:
+            self.formal_name = formal_name
     
     @cached_property
     def recommended(self): return False
