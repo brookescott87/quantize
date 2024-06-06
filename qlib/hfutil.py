@@ -34,6 +34,8 @@ def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
             os.unlink(sha_path)
 
     size = os.path.getsize(path)
+    if size >= 50_000_000_000:
+        raise ValueError(f'File {path} size {size} exceeds maximum of 50 GB')
     with io.open(path, 'rb') as file:
         sample = file.peek(512)[:512]
         if not digest:
