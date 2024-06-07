@@ -38,6 +38,8 @@ BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
+ngl := $(addprefix -ngl ,$(NGL))
+
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
 IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
 
@@ -66,11 +68,11 @@ xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVE
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
-imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
+imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 quantize = $(TOASTER_BIN)/quantize $1 $2 $(call qtype,$2)
-perplexity := $(TOASTER_BIN)/perplexity
+perplexity := $(TOASTER_BIN)/perplexity $(ngl)
 
 all:: quants
 bin:: $(QUANTMODEL).bin
