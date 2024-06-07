@@ -29,6 +29,7 @@ endif
 
 #imatrix_default_dataset := 20k_random_data.txt
 imatrix_default_dataset := groups_merged.txt
+ppl_default_dataset := wiki_test.txt
 #default_ftype := auto
 default_ftype := f32
 
@@ -39,6 +40,9 @@ QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
 IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
+
+PPL_DATASET := $(or $(PPL_DATASET),$(ppl_default_dataset))
+ppl_input := $(DATADIR)/$(PPL_DATASET)
 
 mkreadme_opts :=
 mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
@@ -66,6 +70,7 @@ imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 -f $(imatrix_input
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 quantize = $(TOASTER_BIN)/quantize $1 $2 $(call qtype,$2)
+perplexity := $(TOASTER_BIN)/perplexity
 
 all:: quants
 bin:: $(QUANTMODEL).bin
@@ -93,6 +98,12 @@ $(imatrix_input):
 
 %.imatrix: | %.bin $(imatrix_input)
 	$(call imatrix,$*.bin,$@)
+
+%.klb: %.bin $(ppl_input)
+	$(perplexity) -m $*.bin -f $(ppl_input) --kl-divergence-base $@
+
+%.ppl.out: %.gguf $(QUANTMODEL).klb
+	$(perplexity) -m $*.gguf --kl-divergence --kl-divergence-base $(QUANTMODEL).klb | tee $@
 
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
