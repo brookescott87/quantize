@@ -38,7 +38,7 @@ def next_file(dirp):
     return None
 
 def gguf_split(p: Path):
-    result = subprocess.run([gguf_split_exe, '--split-max-size', str(MAX_UPLOAD_SIZE), p])
+    result = subprocess.run([gguf_split_exe, '--split-max-size', '50G', p])
     if result.returncode:
         raise RuntimeError(f'gguf-split returned {result.returncode}')
     remove_file(p)

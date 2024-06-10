@@ -19,7 +19,7 @@ def oversize_ggufs(d: Path) -> Iterator[Path]:
     return (f for f in d.iterdir() if f.suffix == '.gguf' and f.stat().st_size > MAX_UPLOAD_SIZE)
 
 def gguf_split(p: Path, keep=False):
-    result = subprocess.run([gguf_split_exe, '--split-max-size', str(MAX_UPLOAD_SIZE), p])
+    result = subprocess.run([gguf_split_exe, '--split-max-size', '50G', p])
     if result.returncode:
         raise RuntimeError(f'gguf-split returned {result.returncode}')
     if keep:
