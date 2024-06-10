@@ -74,25 +74,28 @@ qupload := python $(SCRIPTDIR)/qupload.py
 quantize = $(TOASTER_BIN)/quantize $1 $2 $(call qtype,$2)
 perplexity := $(TOASTER_BIN)/perplexity $(ngl)
 
+B := $(source)/$(BASEMODEL)
+Q := $(QUANTMODEL)
+
 all:: quants
-bin:: $(QUANTMODEL).bin
-imat:: $(QUANTMODEL).imatrix
+bin:: $Q.bin
+imat:: $Q.imatrix
 quants:: assets bin imat
 quants:: $(QUANTS)
 assets:: $(ASSETS) README.md
 
-$(QUANTMODEL).bin: | $(source)/$(BASEMODEL)
-	test -f $@ || $(call convert,$|,$(FTYPE),$@)
+$Q.bin: | $B
+	test -f $@ || $(call convert,$B,$(FTYPE),$@)
 
-$(QUANTS):| $(QUANTMODEL).bin $(QUANTMODEL).imatrix
+$(QUANTS):| $Q.bin $Q.imatrix
 
 $(IQUANTS): %.gguf:
-	$(call quantize,--imatrix $(QUANTMODEL).imatrix $(QUANTMODEL).bin,$@)
+	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
 
 $(KQUANTS): %.gguf:
-	$(call quantize,$(QUANTMODEL).bin,$@)
+	$(call quantize,$Q.bin,$@)
 
-_meta.json: $(QUANTMODEL).bin
+_meta.json: $Q.bin
 	python $(MAKEDIR)/meta.py $(META_OPTS) $@ $<
 
 $(imatrix_input):
@@ -104,8 +107,8 @@ $(imatrix_input):
 %.klb: %.bin $(ppl_input)
 	$(perplexity) -m $*.bin -f $(ppl_input) --kl-divergence-base $@
 
-%.ppl.out: %.gguf $(QUANTMODEL).klb
-	$(perplexity) -m $*.gguf --kl-divergence --kl-divergence-base $(QUANTMODEL).klb | tee $@
+%.ppl.out: %.gguf $Q.klb
+	$(perplexity) -m $*.gguf --kl-divergence --kl-divergence-base $Q.klb | tee $@
 
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
