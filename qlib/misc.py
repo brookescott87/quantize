@@ -80,6 +80,11 @@ class JSONEncoder(json.JSONEncoder):
                     separators = self.compact_separators
         super().__init__(ensure_ascii=ensure_ascii, indent=indent, separators=separators, **kwargs)
 
+    def default(self, o):
+        if is_dataclass_instance(o):
+            return vars(o)
+        return super().default(o)
+
 def to_json(obj:Any, readable=False):
     return json.dumps(obj, cls=JSONEncoder, indent=bool(readable))
 
