@@ -224,7 +224,8 @@ class Manifest:
                 'size': mf.size,
                 'displayName': f'{self.formal_name} ({mf.qtype})',
                 'name': lname,
-                'cloudCtxSize': None
+                'cloudCtxSize': None,
+                'cloudPlan': None
             }
 
     def files(self):
@@ -244,7 +245,8 @@ class Manifest:
                         'size': mf.size,
                         'displayName': f'{self.formal_name} ({mf.qtype})',
                         'name': lname,
-                        'cloudCtxSize': None
+                        'cloudCtxSize': None,
+                        'cloudPlan': None
                     }
 
     def generate(self, summary=False) -> dict:
@@ -261,17 +263,22 @@ class Manifest:
                 'featureToNewUsers': False,
                 'updatedAt': ts,
                 'createdAt': ts,
-                'promptFormat': self.prompt_format or 'general',
-                'isDefault': True
+                'promptFormat': self.prompt_format or 'general'
             },
             'isUpdate': False
         }
     
+    def register(self, summary=False) -> dict:
+        return {'json': self.generate(summary)}
+    
     def json(self, readable = False, summary = False) -> str:
         return misc.to_json(self.generate(summary), readable)
     
+    def jsonr(self, readable = False, summary = False) -> str:
+        return misc.to_json(self.register(summary), readable)
+    
     def show(self, readable = True, summary = False):
-        print(self.json(readable, summary))
+        print(self.jsonr(readable, summary))
 
     def summary(self, readable = True):
         self.show(readable, True)
@@ -284,7 +291,8 @@ class RequestFailed(Exception):
 class Requestor:
     uuid_rx = re.compile('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}')
     cookie_name = '__Secure-next-auth.session-token'
-    server = 'hub-uploader-private.faraday.dev'
+    server = 'backyard.ai'
+    target = 'hub.modelUploader'
 
     def __init__(self, token:str=None):
         self.cookie_jar = Backyard.cookie_jar
@@ -301,14 +309,14 @@ class Requestor:
             self.cookie_jar.save()
 
     def request(self, command, params=None, get=None, post=None, **kwargs_):
-        kwargs = {'params': {'batch': 1}, 'cookies': self.cookie_jar}
+        kwargs = {'params': {}, 'cookies': self.cookie_jar}
         if params:
             kwargs['params'].update(params)
         kwargs.update(kwargs_)
 
         if bool(get) ^ bool(post):
             if isinstance(data := get or post, dict):
-                data = {0: {'json': get or post}}
+                data = {'json': get or post}
                 if get:
                     func = requests.get
                     kwargs['params']['input'] = misc.to_json(data)
@@ -320,7 +328,7 @@ class Requestor:
         else:
             raise ValueError('cannot specify both get and post')
 
-        url = f'https://{self.server}/api/trpc/models.{command}'
+        url = f'https://{self.server}/api/trpc/{self.target}.{command}'
         self.r = r = func(url, **kwargs)
         if r.ok:
             self.cookie_jar.save()
