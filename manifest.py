@@ -14,6 +14,10 @@ def main():
                        help='Summarize the manifest')
     group.add_argument('--view', '-v', action='store_true',
                        help='View the manifest')
+    group.add_argument('--list', '-L', action='store_true',
+                       help='List registered models' )
+    group.add_argument('--get-head', '-H', action='store_true',
+                       help='Return the head commit id of the main branch of the repository.')
 
     parser.add_argument('--request-token', '-t', type=str, default=None,
                         help='Request token required to submit')
@@ -33,9 +37,18 @@ def main():
                         help='Repository to generate manifest for')
     args = parser.parse_args()
 
+    r = qlib.backyard.Requestor(args.request_token)
+
     if not args.repo_id:
-        for name in qlib.list_models():
-            print(name)
+        if args.list:
+            print(r.get_models())
+        else:
+            for name in qlib.list_models():
+                print(name)
+        return
+
+    if args.get_head:
+        print(r.get_last_commit(args.repo_id))
         return
 
     m = qlib.QuantModel(args.repo_id)
@@ -46,12 +59,13 @@ def main():
                                  args.catalog_name,
                                  args.formal_name)
     if args.submit:
-        r = qlib.backyard.Requestor(args.request_token)
         print(r.submit(man))
     elif args.summarize:
         man.summary()
-    else:
+    elif args.view:
         man.show()
+    else:
+        raise ValueError('invalid arguments')
 
 if __name__ == '__main__':
     main()
