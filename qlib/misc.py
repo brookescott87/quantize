@@ -4,6 +4,7 @@ import json
 from datetime import datetime as dt, timedelta
 from typing import Any, Callable
 from functools import cached_property
+import dataclasses
 import argparse
 
 _re_special_chars_map = {n:u for n,u in re._special_chars_map.items() if chr(n).isprintable()}
@@ -15,6 +16,9 @@ def badattr(self, attr:str):
     raise AttributeError(f'{repr(self.__class__)} object has no attribute {repr(attr)}')
 
 singleton = lambda c: c()
+
+def is_dataclass_instance(o):
+    return dataclasses.is_dataclass(o) and not isinstance(o, type)
 
 class settable_cached_property(cached_property):
     fset: Callable[[Any, Any], None] | None
