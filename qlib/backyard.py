@@ -206,6 +206,7 @@ class Manifest:
                 qtype = mf.name.split('.')[-2]
                 if '-split-' not in qtype:
                     mf.qtype = qtype
+                    mf.sortkey = qtype if 'Q' in qtype else '_'+qtype
                     yield mf
 
     def files1(self):
@@ -229,25 +230,22 @@ class Manifest:
             }
 
     def files(self):
-        flist = sorted(self.nonsplitggufs(), key=attrgetter('size'))
-        for filter in ('Q','IQ','F','BF'):
-            for mf in flist:
-                if mf.qtype.startswith(filter):
-                    lname = f'{self.catalog_name}.{self.file_format}.{mf.qtype.lower()}'
-                    yield {
-                        'commitHash': self.model.model_info.sha,
-                        'isDeprecated': False,
-                        'displayLink' : self.model.url + '/',
-                        'hfPathFromRoot': mf.name,
-                        'fileFormat': self.file_format,
-                        'hfRepo': self.model.repo_id,
-                        'localFilename': lname + '.gguf',
-                        'size': mf.size,
-                        'displayName': f'{self.formal_name} ({mf.qtype})',
-                        'name': lname,
-                        'cloudCtxSize': None,
-                        'cloudPlan': None
-                    }
+        for mf in sorted(self.nonsplitggufs(), key=attrgetter('sortkey')):
+            lname = f'{self.catalog_name}.{self.file_format}.{mf.qtype.lower()}'
+            yield {
+                'commitHash': self.model.model_info.sha,
+                'isDeprecated': False,
+                'displayLink' : self.model.url + '/',
+                'hfPathFromRoot': mf.name,
+                'fileFormat': self.file_format,
+                'hfRepo': self.model.repo_id,
+                'localFilename': lname + '.gguf',
+                'size': mf.size,
+                'displayName': f'{self.formal_name} ({mf.qtype})',
+                'name': lname,
+                'cloudCtxSize': None,
+                'cloudPlan': None
+            }
 
     def generate(self, summary=False) -> dict:
         ts = timestamp()
