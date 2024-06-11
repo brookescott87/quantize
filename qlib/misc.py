@@ -69,9 +69,19 @@ class ProxyObject:
         for k in names:
             vars(self).pop(k, None)
 
+class JSONEncoder(json.JSONEncoder):
+    compact_separators = (',',':')
+    def __init__(self, *, ensure_ascii=False, indent=None, separators=None, **kwargs):
+        match indent:
+            case True: indent = 4
+            case False:
+                indent = None
+                if not separators:
+                    separators = self.compact_separators
+        super().__init__(ensure_ascii=ensure_ascii, indent=indent, separators=separators, **kwargs)
+
 def to_json(obj:Any, readable=False):
-    dump_opts = {'indent': 4} if readable else { 'separators': (',',':') }
-    return json.dumps(obj, ensure_ascii=False, **dump_opts)
+    return json.dumps(obj, cls=JSONEncoder, indent=bool(readable))
 
 def varname(s:str):
     return s.lower().replace(' ','_')
