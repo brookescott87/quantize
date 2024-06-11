@@ -65,10 +65,10 @@ class InfoBlock:
     info_rx = re.compile(f'# (?P<title>.+)(?P<vars>{var_rx.pattern}*)')
     rx = re.compile(delim_rx.pattern + info_rx.pattern + delim_rx.pattern)
 
-    def __init__(self, title:str, vars:List[Tuple[str,str]]):
-        self.__dict__.update({
+    def __init__(self, title:str, vlist:List[Tuple[str,str]]):
+        vars(self).update({
             'title': title,
-            '_vars': [InfoBlock.Field(k,v) for (k,v) in vars]
+            '_vars': [InfoBlock.Field(k,v) for (k,v) in vlist]
         })
 
     def __getattr__(self, name:str) -> str:

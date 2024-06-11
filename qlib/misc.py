@@ -59,18 +59,18 @@ class settable_cached_property(cached_property):
 class ProxyObject:
     @classmethod
     def __init_subclass__(cls):
-        if '__init_proxy__' in cls.__dict__:
+        if '__init_proxy__' in vars(cls):
             cls.__init_proxy__()
 
     def refresh(self):
-        for k in self.__dict__:
+        for k in list(vars(self)):
             if not k.startswith('_'):
-                self.__dict__.pop(k, None)
+                vars(self).pop(k, None)
 
     def forget(self, *names):
         for k in names:
-            if k in self.__dict__:
-                self.__dict__.pop(k, None)
+            if k in vars(self):
+                vars(self).pop(k, None)
 
 def to_json(obj:Any, readable=False):
     dump_opts = {'indent': 4} if readable else { 'separators': (',',':') }

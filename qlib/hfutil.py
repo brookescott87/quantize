@@ -325,7 +325,7 @@ class QuantModel(Model):
 
     @classmethod
     def __init_proxy__(cls):
-        for attrname,bcp in BaseModel.__dict__.items():
+        for attrname,bcp in vars(BaseModel).items():
             if isinstance(bcp, cached_property):
                 p = cls.proxy_property(bcp)
                 qcp = cached_property(p)

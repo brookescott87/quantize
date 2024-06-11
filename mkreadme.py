@@ -105,7 +105,7 @@ def main():
     if args.meta:
         with args.meta.open('rt', encoding='utf-8') as f:
             meta = json.load(f)
-        argsd = args.__dict__
+        argsd = vars(args)
         for k,v in meta.items():
             if v and k in argsd and not argsd[k]:
                 argsd[k] = v
