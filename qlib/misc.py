@@ -69,8 +69,7 @@ class ProxyObject:
 
     def forget(self, *names):
         for k in names:
-            if k in vars(self):
-                vars(self).pop(k, None)
+            vars(self).pop(k, None)
 
 def to_json(obj:Any, readable=False):
     dump_opts = {'indent': 4} if readable else { 'separators': (',',':') }
