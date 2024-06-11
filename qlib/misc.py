@@ -63,9 +63,7 @@ class ProxyObject:
             cls.__init_proxy__()
 
     def refresh(self):
-        for k in list(vars(self)):
-            if not k.startswith('_'):
-                vars(self).pop(k, None)
+        self.forget(*filter(lambda k: not k.startswith('_'), vars(self)))
 
     def forget(self, *names):
         for k in names:
