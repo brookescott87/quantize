@@ -246,20 +246,34 @@ class Manifest:
             'isUpdate': False
         }
     
-    def register(self, summary=False) -> dict:
-        return {'json': self.generate(summary)}
-    
-    def json(self, readable = False, summary = False) -> str:
-        return misc.to_json(self.generate(summary), readable)
-    
-    def jsonr(self, readable = False, summary = False) -> str:
-        return misc.to_json(self.register(summary), readable)
-    
     def show(self, readable = True, summary = False):
-        print(self.jsonr(readable, summary))
+        print(misc.to_json(self.generate(summary),readable))
 
     def summary(self, readable = True):
         self.show(readable, True)
+
+class Request:
+    def __init__(self, data: dict):
+        if 'json' in data:
+            print("Warning: Request already contained top-level 'json' key")
+            self.data = data
+        else:
+            self.data = {'json': data}
+    
+    def as_json(self, readable=False):
+        return misc.to_json(self.data, readable=readable)
+
+class GetRequest(Request):
+    def __call__(self, url, **kwargs):
+        if not 'params' in kwargs:
+            kwargs['params'] = dict()
+        kwargs['params']['input'] = self.as_json()
+        return requests.get(url, **kwargs)
+
+class PostRequest(Request):
+    def __call__(self, url, **kwargs):
+        kwargs['json'] = self.data.copy()
+        return requests.post(url, **kwargs)
 
 class RequestFailed(Exception):
     def __init__(self, request):
@@ -286,39 +300,24 @@ class Requestor:
             self.cookie_jar.set_cookie(cookie)
             self.cookie_jar.save()
 
-    def request(self, command, params=None, get=None, post=None, **kwargs_):
-        kwargs = {'params': {}, 'cookies': self.cookie_jar}
+    def request(self, command, rq:(GetRequest|PostRequest), params=None, **kwargs_) -> str:
+        kwargs = {'cookies': self.cookie_jar}
         if params:
-            kwargs['params'].update(params)
+            kwargs['params'] = params.copy()
         kwargs.update(kwargs_)
 
-        if bool(get) ^ bool(post):
-            if isinstance(data := get or post, dict):
-                data = {'json': get or post}
-                if get:
-                    func = requests.get
-                    kwargs['params']['input'] = misc.to_json(data)
-                else:
-                    func = requests.post
-                    kwargs['json'] = data
-            else:
-                raise ValueError('get or post parameter must be a dict')
-        else:
-            raise ValueError('cannot specify both get and post')
-
         url = f'https://{self.server}/api/trpc/{self.target}.{command}'
-        self.r = r = func(url, **kwargs)
+        self.r = r = rq(url, **kwargs)
         if r.ok:
             self.cookie_jar.save()
             return r.json()
         raise RequestFailed(r)
     
     def get_models(self, only_non_gguf:bool):
-        return self.request('getModels', get={'onlyNonGGUF': only_non_gguf})
+        return self.request('getModels', GetRequest({'onlyNonGGUF': only_non_gguf}))
 
     def get_last_commit(self, model_id):
-        data = {'url': f'https://huggingface.co/{model_id}'}
-        return self.request('getLastCommit', post=data)
+        return self.request('getLastCommit', PostRequest({'url': f'https://huggingface.co/{model_id}'}))
 
     def submit(self, manifest: Manifest):
-        return self.request('addPendingApproval', post=manifest.generate())
+        return self.request('addPendingApproval', PostRequest(manifest.generate()))
