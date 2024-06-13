@@ -63,7 +63,7 @@ KQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(KQTYPES))
 QUANTS := $(IQUANTS) $(KQUANTS)
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 
-convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--fallback-pre=$(PRETOKENIZER))
+convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
