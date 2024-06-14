@@ -82,9 +82,9 @@ all:: quants
 bin:: $Q.bin
 imat:: $Q.imatrix
 klb:: $Q.klb
+ppl:: $(PPLOUT)
 quants:: assets bin imat
 quants:: $(QUANTS)
-quants:: klb $(PPLOUT)
 assets:: $(ASSETS) README.md
 
 $Q.bin: | $B
@@ -108,7 +108,7 @@ $(imatrix_input):
 	$(call imatrix,$*.bin,$@)
 
 %.klb: %.bin $(ppl_input)
-	$(perplexity) -sm none -m $*.bin -f $(ppl_input) --kl-divergence-base $@.tmp && mv -f $@.tmp $@
+	$(perplexity) -sm none -m $*.bin -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
 
 %.ppl.out: %.gguf $Q.klb
 	$(perplexity) -m $*.gguf $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
