@@ -82,9 +82,9 @@ all:: quants
 bin:: $Q.bin
 imat:: $Q.imatrix
 klb:: $Q.klb
-quants:: assets bin imat klb
+quants:: assets bin imat
 quants:: $(QUANTS)
-quants:: $(PPLOUT)
+quants:: klb $(PPLOUT)
 assets:: $(ASSETS) README.md
 
 $Q.bin: | $B
