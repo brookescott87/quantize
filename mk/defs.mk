@@ -105,10 +105,10 @@ $(imatrix_input):
 	$(call imatrix,$*.bin,$@)
 
 %.klb: %.bin $(ppl_input)
-	$(perplexity) -sm none -m $*.bin -f $(ppl_input) --kl-divergence-base $@
+	$(perplexity) -sm none -m $*.bin -f $(ppl_input) --kl-divergence-base $@.tmp && mv -f $@.tmp $@
 
 %.ppl.out: %.gguf $Q.klb
-	$(perplexity) -m $*.gguf $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@
+	$(perplexity) -m $*.gguf $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
 
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
