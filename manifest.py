@@ -35,6 +35,8 @@ def main():
                         help='Sets the catalog name for the model')
     parser.add_argument('--formal-name', '-n', type=str, default=None,
                         help='Sets the formal name for the model')
+    parser.add_argument('--update', '-u', dest='is_update', action='store_true',
+                        help='Sets the update flag on the manifest')
     parser.add_argument('repo_id', type=str, nargs='?',
                         help='Repository to generate manifest for')
     args = parser.parse_args()
@@ -59,7 +61,8 @@ def main():
                                  args.description,
                                  args.prompt_format,
                                  args.catalog_name,
-                                 args.formal_name)
+                                 args.formal_name,
+                                 args.is_update)
     if args.submit:
         print(r.submit(man))
     elif args.summarize:

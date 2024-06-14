@@ -169,7 +169,7 @@ class Manifest:
     file_format:str = 'gguf_v2'
 
     def __init__(self, model:hfutil.QuantModel, recommended:bool=None, description:str = None, prompt_format:str = None,
-                 catalog_name=None, formal_name=None):
+                 catalog_name=None, formal_name=None, is_update:bool=False):
         self.model = model
         if recommended is not None:
             self.recommended = recommended
@@ -181,6 +181,7 @@ class Manifest:
             self.catalog_name = catalog_name
         if formal_name:
             self.formal_name = formal_name
+        self.is_update = bool(is_update)
     
     @cached_property
     def recommended(self): return False
@@ -251,7 +252,7 @@ class Manifest:
                 'createdAt': ts,
                 'promptFormat': self.prompt_format or 'general'
             },
-            'isUpdate': False
+            'isUpdate': self.is_update
         }
     
     def show(self, readable = True, summary = False):
