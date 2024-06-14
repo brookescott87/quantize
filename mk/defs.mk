@@ -61,6 +61,7 @@ FTYPE := $(or $(FTYPE),$(default_ftype))
 IQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(IQTYPES))
 KQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(KQTYPES))
 QUANTS := $(IQUANTS) $(KQUANTS)
+PPLOUT := $(patsubst %.gguf,%.ppl.out,$(QUANTS))
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 
 convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
