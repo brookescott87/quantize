@@ -72,7 +72,7 @@ imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 $(ngl) -f $(imatri
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 quantize = $(TOASTER_BIN)/quantize $1 $2 $(call qtype,$2)
-perplexity := $(TOASTER_BIN)/perplexity $(ngl)
+perplexity := $(TOASTER_BIN)/perplexity
 
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
@@ -108,7 +108,7 @@ $(imatrix_input):
 	$(perplexity) -sm none -m $*.bin -f $(ppl_input) --kl-divergence-base $@
 
 %.ppl.out: %.gguf $Q.klb
-	$(perplexity) -m $*.gguf --kl-divergence --kl-divergence-base $Q.klb | tee $@
+	$(perplexity) -m $*.gguf $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@
 
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
