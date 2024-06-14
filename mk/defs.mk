@@ -38,7 +38,7 @@ BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
-ngl := $(addprefix -ngl ,$(NGL))
+ngl := $(addprefix -ngl ,$(or $(NGL),$(N_GPU_LAYERS)))
 
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
 IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
