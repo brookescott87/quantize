@@ -127,8 +127,8 @@ class InfoBlock:
     @classmethod
     def parse(cls, text: str):
         if m := InfoBlock.info_rx.fullmatch(text):
-            return cls(title=m.group('title'),
-                       vars=cls.var_rx.findall(m.group('vars')))
+            return cls(m.group('title'),
+                       cls.var_rx.findall(m.group('vars')))
 
 @dataclass
 class MetaInfo:
