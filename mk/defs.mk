@@ -80,6 +80,7 @@ Q := $(QUANTMODEL)
 all:: quants
 bin:: $Q.bin
 imat:: $Q.imatrix
+klb:: $Q.klb
 quants:: assets bin imat
 quants:: $(QUANTS)
 assets:: $(ASSETS) README.md
