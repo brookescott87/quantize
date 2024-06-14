@@ -19,6 +19,8 @@ def main():
     group.add_argument('--get-head', '-H', action='store_true',
                        help='Return the head commit id of the main branch of the repository.')
 
+    parser.add_argument('--canary', '-C', action='store_true',
+                        help='Use canary server')
     parser.add_argument('--request-token', '-t', type=str, default=None,
                         help='Request token required to submit')
     parser.add_argument('--recommended', '-r', action='store_true',

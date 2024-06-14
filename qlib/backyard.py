@@ -27,7 +27,14 @@ class Backyard:
 
     @cached_property
     def cookie_jar(self):
-        cookie_jar_path = self.backyard_dir / 'cookie.jar'
+        return self.get_cookie_jar('cookie.jar')
+    
+    @cached_property
+    def canary_cookie_jar(self):
+        return self.get_cookie_jar('canary-cookie.jar')
+    
+    def get_cookie_jar(self, basename):
+        cookie_jar_path = self.backyard_dir / basename
         if cookie_jar_path.exists():
             with cookie_jar_path.open('rt') as f:
                 jar = requests.cookies.cookiejar_from_dict(json.load(f))
@@ -36,6 +43,7 @@ class Backyard:
         jar.save_file = cookie_jar_path
 
         return jar
+
 
 def save_cookie_jar(jar):
     with jar.save_file.open('wt', encoding='utf-8') as f:
@@ -286,8 +294,13 @@ class Requestor:
     server = 'backyard.ai'
     target = 'hub.modelUploader'
 
-    def __init__(self, token:str=None):
-        self.cookie_jar = Backyard.cookie_jar
+    def __init__(self, token:str=None, canary:bool=False):
+        if canary:
+            self.cookie_jar = Backyard.canary_cookie_jar
+            self.server = 'canary-dev.backyard.ai'
+        else:
+            self.cookie_jar = Backyard.cookie_jar
+            self.server = 'backyard.ai'
         self.r = None
 
         if token:
@@ -313,7 +326,7 @@ class Requestor:
             return r.json()
         raise RequestFailed(r)
     
-    def get_models(self, only_non_gguf:bool):
+    def get_models(self, only_non_gguf:bool=False):
         return self.request('getModels', GetRequest({'onlyNonGGUF': only_non_gguf}))
 
     def get_last_commit(self, model_id):
