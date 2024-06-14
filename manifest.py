@@ -41,36 +41,44 @@ def main():
                         help='Repository to generate manifest for')
     args = parser.parse_args()
 
-    r = qlib.backyard.Requestor(args.request_token)
+    r = qlib.backyard.Requestor(args.request_token, args.canary)
 
-    if not args.repo_id:
-        if args.list:
-            print(r.get_models())
+    try:
+        if not args.repo_id:
+            if args.list:
+                print(r.get_models())
+            else:
+                for name in qlib.list_models():
+                    print(name)
+            return
+
+        if args.get_head:
+            print(r.get_last_commit(args.repo_id))
+            return
+
+        m = qlib.QuantModel(args.repo_id)
+        man = qlib.backyard.Manifest(m,
+                                    args.recommended,
+                                    args.description,
+                                    args.prompt_format,
+                                    args.catalog_name,
+                                    args.formal_name,
+                                    args.is_update)
+        if args.submit:
+            print(r.submit(man))
+        elif args.summarize:
+            man.summary()
+        elif args.view:
+            man.show()
         else:
-            for name in qlib.list_models():
-                print(name)
-        return
+            raise ValueError('invalid arguments')
 
-    if args.get_head:
-        print(r.get_last_commit(args.repo_id))
-        return
+    except qlib.backyard.RequestFailed as ex:
+        print(f"Request failed: {ex}")
+        rex = ex.request
+        print(f" URL: {rex.url}")
+        print(f" JSON: {rex.json()}")
 
-    m = qlib.QuantModel(args.repo_id)
-    man = qlib.backyard.Manifest(m,
-                                 args.recommended,
-                                 args.description,
-                                 args.prompt_format,
-                                 args.catalog_name,
-                                 args.formal_name,
-                                 args.is_update)
-    if args.submit:
-        print(r.submit(man))
-    elif args.summarize:
-        man.summary()
-    elif args.view:
-        man.show()
-    else:
-        raise ValueError('invalid arguments')
 
 if __name__ == '__main__':
     main()
