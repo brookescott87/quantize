@@ -292,7 +292,6 @@ class RequestFailed(Exception):
 class Requestor:
     uuid_rx = re.compile('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}')
     cookie_name = '__Secure-next-auth.session-token'
-    server = 'backyard.ai'
     target = 'hub.modelUploader'
 
     def __init__(self, token:str=None, canary:bool=False):
