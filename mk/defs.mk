@@ -105,7 +105,7 @@ $(imatrix_input):
 	$(call imatrix,$*.bin,$@)
 
 %.klb: %.bin $(ppl_input)
-	$(perplexity) -m $*.bin -f $(ppl_input) --kl-divergence-base $@
+	$(perplexity) -sm none -m $*.bin -f $(ppl_input) --kl-divergence-base $@
 
 %.ppl.out: %.gguf $Q.klb
 	$(perplexity) -m $*.gguf --kl-divergence --kl-divergence-base $Q.klb | tee $@
