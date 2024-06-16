@@ -87,19 +87,22 @@ quants:: assets bin imat
 quants:: $(QUANTS)
 assets:: $(ASSETS) README.md
 
+clean::
+	$(if $(wildcard *.tmp),rm -f *.tmp)
+
+upload::
+	$(qupload) -i -p -R $(QUANTREPO) .
+
+.DELETE_ON_ERROR:
+
+$(source)/$(BASEMODEL):
+	mkdir -p $(@D)
+	python $(SCRIPTDIR)/download_model.py $(BASEREPO) $@
+
 $Q.bin: | $B
 	test -f $@ || $(call convert,$B,$(FTYPE),$@)
 
 $(QUANTS):| $Q.bin $Q.imatrix
-
-$(IQUANTS): %.gguf:
-	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
-
-$(KQUANTS): %.gguf:
-	$(call quantize,$Q.bin,$@)
-
-_meta.json: $Q.bin
-	python $(MAKEDIR)/meta.py $(META_OPTS) $@ $<
 
 $(imatrix_input):
 	cp $(imatrix_data) $@
@@ -107,11 +110,11 @@ $(imatrix_input):
 %.imatrix: | %.bin $(imatrix_input)
 	$(call imatrix,$*.bin,$@)
 
-%.klb: %.bin $(ppl_input)
-	$(perplexity) -sm none -m $*.bin -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
+_meta.json: $Q.bin
+	python $(MAKEDIR)/meta.py $(META_OPTS) $@ $<
 
-%.ppl.out: %.gguf $Q.klb
-	$(perplexity) -m $*.gguf $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
+%.klb: %.bin $(ppl_input)
+	$(perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
 
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
@@ -120,14 +123,11 @@ README.md: _meta.json GNUmakefile
 	rm -f $@
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
 
-$(source)/$(BASEMODEL):
-	mkdir -p $(@D)
-	python $(SCRIPTDIR)/download_model.py $(BASEREPO) $@
+$(IQUANTS): %.gguf:
+	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
 
-.DELETE_ON_ERROR:
+$(KQUANTS): %.gguf:
+	$(call quantize,$Q.bin,$@)
 
-clean::
-	$(if $(wildcard *.tmp),rm -f *.tmp)
-
-upload::
-	$(qupload) -i -p -R $(QUANTREPO) .
+%.ppl.out: %.gguf $Q.klb
+	$(perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
