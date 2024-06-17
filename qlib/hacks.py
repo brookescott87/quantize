@@ -12,4 +12,5 @@ def path_add_str(self: Path, other) -> Path:
 initattr(Path, '__add__', path_add_str)
 
 initattr(Path, 'size', property(lambda self: self.stat().st_size))
-initattr(Path, 'mtime', property(lambda self: self.lstat().st_mtime))
+initattr(Path, 'mtime',
+         property(lambda self: self.lstat().st_mtime if self.exists(follow_symlinks=False) else None))
