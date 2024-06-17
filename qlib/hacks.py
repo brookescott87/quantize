@@ -1,4 +1,5 @@
 from pathlib import Path
+import math
 
 def initattr(obj, name, value):
     if not hasattr(obj, name):
@@ -14,3 +15,5 @@ initattr(Path, '__add__', path_add_str)
 initattr(Path, 'size', property(lambda self: self.stat().st_size))
 initattr(Path, 'mtime',
          property(lambda self: self.lstat().st_mtime if self.exists(follow_symlinks=False) else None))
+initattr(Path, 'is_newer', lambda self, other: (self.mtime or -math.inf) > (other.mtime or -math.inf))
+initattr(Path, 'is_older', lambda self, other: (self.mtime or -math.inf) < (other.mtime or -math.inf))
