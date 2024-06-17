@@ -6,16 +6,15 @@ import qlib
 import argparse
 
 def hash_path(p):
-    return p.with_name(p.name + '.sha256')
+    return p + '.sha256'
 
 def needs_hash(p):
-    hp = hash_path(p)
-    return p.stat().st_mtime > hp.stat().st_mtime if hp.exists() else True
+    return p.is_newer(hash_path(p))
 
 def hash_file(p, message):
     hp = hash_path(p)
     hp.unlink(missing_ok = True)
-    fsize = p.stat().st_size
+    fsize = p.size
     pl = qlib.misc.ProgressLine(fsize, message)
     with p.open('rb') as f:
         h = hashlib.sha256(usedforsecurity=False)

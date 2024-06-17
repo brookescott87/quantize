@@ -16,7 +16,7 @@ gguf_split_exe = TOASTER/'bin'/'gguf-split'
 shard_rx = re.compile('.*-split-\d{5}-of-\d{5}$')
 
 def oversize_ggufs(d: Path) -> Iterator[Path]:
-    return (f for f in d.iterdir() if f.suffix == '.gguf' and f.stat().st_size > MAX_UPLOAD_SIZE)
+    return (f for f in d.iterdir() if f.suffix == '.gguf' and f.size > MAX_UPLOAD_SIZE)
 
 def gguf_split(p: Path, keep=False):
     result = subprocess.run([gguf_split_exe, '--split-max-size', '50G', p])
