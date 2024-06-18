@@ -113,18 +113,18 @@ class StatusLine:
     def __init__(self, stream=sys.stdout):
         self.out = stream
         self.pos = 0
-        self.line = 0
+        self.end = 0
 
     def retn(self, linefeed = False):
-        if (pad := self.line - self.pos) > 0:
+        if (pad := self.end - self.pos) > 0:
             self.out.write(' '*pad)
         if linefeed:
             self.out.write('\n')
-            self.line = 0
+            self.end = 0
         else:
             self.out.write('\r')
             self.out.flush()
-            self.line = self.pos
+            self.end = self.pos
         self.pos = 0
 
     def print(self, text):
