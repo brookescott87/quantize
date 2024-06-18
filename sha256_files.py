@@ -3,6 +3,7 @@
 from pathlib import Path
 import hashlib
 import qlib
+from qlib.defs import *
 import argparse
 
 def hash_path(p):
@@ -18,7 +19,7 @@ def hash_file(p, message):
     pl = qlib.misc.ProgressLine(fsize, message)
     with p.open('rb') as f:
         h = hashlib.sha256(usedforsecurity=False)
-        buffer = qlib.IOBuffer(1024*1024)
+        buffer = qlib.IOBuffer(MiB)
         while nbytes := buffer.readfrom(f):
             h.update(buffer.bytes)
             pl.update_progress(nbytes)

@@ -11,6 +11,7 @@ import clear_screen
 import huggingface_hub
 import hashlib
 from typing import List
+from .defs import *
 from .misc import *
 from .iobuffer import *
 
@@ -41,7 +42,7 @@ def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
         if not digest:
             pl = ProgressLine(size, f'Hashing {os.path.basename(path)}')
             h = hashlib.sha256(usedforsecurity=False)
-            buffer = IOBuffer(1024*1024)
+            buffer = IOBuffer(MiB)
             while nbytes := buffer.readfrom(file):
                 h.update(buffer.bytes)
                 pl.update_progress(nbytes)

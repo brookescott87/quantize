@@ -5,6 +5,7 @@ from pathlib import Path
 import datetime
 import argparse
 from qlib import IOBuffer
+from qlib.defs import *
 
 class statusline(object):
     def __init__(self, stream=sys.stdout):
@@ -41,7 +42,7 @@ def copy_file(srcpath: Path, destpath: Path):
 
     with open(destpath, 'wb', buffering=0) as destfile:
         with open(srcpath, 'rb', buffering=0) as srcfile:
-            buffer = IOBuffer(1024*1024)
+            buffer = IOBuffer(MiB)
             statln = statusline()
             copied = 0
             start_time = datetime.datetime.now()
