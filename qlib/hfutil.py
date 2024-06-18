@@ -281,7 +281,7 @@ class BaseModel(Model):
     @cached_property
     def model_type(self):
         if (mtype := self.config.get('model_type')) == 'llama':
-            return 'llama3' if self.vocab_size > 100000 else 'llama2'
+            return 'llama3' if self.vocab_size > 100*KB else 'llama2'
         else:
             return mtype
         
