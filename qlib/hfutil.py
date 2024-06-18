@@ -15,6 +15,9 @@ from .defs import *
 from .misc import *
 from .iobuffer import *
 
+MAX_BLOB_SIZE = 10*MB
+MAX_UPLOAD_SIZE = 50*GB
+
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
 
 hfapi = huggingface_hub.HfApi()
@@ -35,7 +38,7 @@ def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
             os.unlink(sha_path)
 
     size = os.path.getsize(path)
-    if size >= 50_000_000_000:
+    if size >= MAX_UPLOAD_SIZE:
         raise ValueError(f'File {path} size {size} exceeds maximum of 50 GB')
     with io.open(path, 'rb') as file:
         sample = file.peek(512)[:512]
@@ -49,7 +52,7 @@ def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
             pl.finish()
             digest = h.digest()
 
-    if not hexdigest and size > 1_000_000:
+    if not hexdigest and size > MAX_BLOB_SIZE:
         hexdigest = digest.hex()
         with io.open(sha_path, 'wt') as file:
             file.write(hexdigest + '\n')
