@@ -15,8 +15,6 @@ def re_escape(s:str) -> str:
 def badattr(self, attr:str):
     raise AttributeError(f'{repr(self.__class__)} object has no attribute {repr(attr)}')
 
-singleton = lambda c: c()
-
 def is_dataclass_instance(o):
     return dataclasses.is_dataclass(o) and not isinstance(o, type)
 

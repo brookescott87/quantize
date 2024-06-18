@@ -7,9 +7,9 @@ from operator import attrgetter
 from typing import List,Tuple
 from datetime import datetime as dt, UTC
 import requests
+from .defs import *
 from . import hfutil
 from . import misc
-from .misc import singleton
 
 link_rx = re.compile('\[(.*?)]\(((https://[^/]+/)([^/]+/.*))\)$')
 ctx_rx = re.compile('(\d+) tokens$')
