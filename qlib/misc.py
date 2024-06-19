@@ -145,25 +145,44 @@ class ConsoleBuffer(io.StringIO):
             return s.expandtabs(tabsize)
 
 class StatusLine:
-    def __init__(self, stream=sys.stdout):
-        self.out = stream
-        self.pos = 0
-        self.end = 0
+    def __init__(self):
+        self.buffer = ConsoleBuffer()
 
     def retn(self, linefeed = False):
-        if (pad := self.end - self.pos) > 0:
-            self.out.write(' '*pad)
+        self.write(' '*self.buffer.ahead)
         if linefeed:
-            self.out.write('\n')
-            self.end = 0
+            sys.stdout.write('\n')
+            self.buffer.reset()
         else:
-            self.out.write('\r')
-            self.out.flush()
-            self.end = self.pos
-        self.pos = 0
+            sys.stdout.write('\r')
+            sys.stdout.flush()
+            self.buffer.rewind()
+
+    def write(self, text):
+        if text:
+            self.buffer.write(text)
+            sys.stdout.write(text)
+
+    def error(self, text):
+        if text:
+            saved = self.buffer.chars
+            self.retn()
+            self.print(text)
+            self.retn(True)
+            self.print(saved)
+
+    def write(self, text):
+        if '\t' in text:
+            text = self.buffer.expandtabs(text)
+        self.buffer.write(text)
+        sys.stdout.write(text)
 
     def print(self, text):
-        self.pos += self.out.write(text)
+        *lines,text = text.split('\n')
+        for line in lines:
+            self.write(line)
+            self.retn(True)
+        self.write(text)
 
 class ProgressLine(StatusLine):
     max_staleness = timedelta(milliseconds=200)
