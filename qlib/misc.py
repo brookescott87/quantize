@@ -1,4 +1,5 @@
 import sys
+import io
 import re
 import json
 from datetime import datetime as dt, timedelta
@@ -108,6 +109,40 @@ class BooleanOptionalAction(argparse.BooleanOptionalAction):
             setattr(namespace, self.dest, False)
         else:
             super().__call__(parser, namespace, values, option_string)
+
+class ConsoleBuffer(io.StringIO):
+    def __init__(self):
+        super().__init__()
+    
+    @property
+    def cursor(self):
+        return self.tell()
+
+    @property
+    def chars(self):
+        return self.getvalue()
+
+    @property
+    def count(self):
+        return len(self.getvalue())
+    
+    @property
+    def ahead(self):
+        return max(self.count - self.cursor, 0)
+
+    def rewind(self):
+        self.seek(0)
+        self.truncate(len(self.chars.rstrip()))
+
+    def reset(self):
+        self.seek(0)
+        self.truncate(0)
+
+    def expandtabs(self, s, tabsize=8):
+        if (ofs := self.cursor % 8) > 0:
+            return (((' '*ofs)+s).expandtabs(tabsize))[ofs:]
+        else:
+            return s.expandtabs(tabsize)
 
 class StatusLine:
     def __init__(self, stream=sys.stdout):
