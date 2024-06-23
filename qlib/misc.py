@@ -187,8 +187,8 @@ class StatusLine:
 class ProgressLine(StatusLine):
     max_staleness = timedelta(milliseconds=200)
 
-    def __init__(self, total_amount:int, message:str, stream=sys.stdout):
-        super().__init__(stream)
+    def __init__(self, total_amount:int, message:str):
+        super().__init__()
         self.message = message
         self.total_amount = total_amount
         self.completed = 0
