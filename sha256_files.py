@@ -10,7 +10,7 @@ def hash_path(p):
     return p + '.sha256'
 
 def needs_hash(p):
-    return p.is_newer(hash_path(p))
+    return p.is_newer_than(hash_path(p))
 
 def hash_file(p, message):
     hp = hash_path(p)
