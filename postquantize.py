@@ -62,12 +62,13 @@ def main():
     parser.add_argument('xguf', type=Path, help='Name of xguf file to operate on')
     args = parser.parse_args()
     init_paths()
-    dirp = (tmpp := args.xguf).parent
-    if (stem := tmpp.name.removesuffix('.xguf.tmp')) == tmpp.name:
-        raise ValueError(f"{tmpp} doesn't have .xguf.tmp suffix")
-    any(map(purge, dirp.glob(stem + '*.gguf'), tmpp))
+    dirp = (xguf := args.xguf).parent
+    if xguf.suffix == '.gguf':
+        raise ValueError(f"{xguf} can't have .gguf suffix")
+    stem = xguf.stem
+    any(map(purge, dirp.glob(stem + '*.gguf'), xguf))
     any(map(purge, dirp.glob(stem + '*.gguf.sha256')))
-    for outp in split_or_link(tmpp):
+    for outp in split_or_link(xguf):
         hash_file(outp)
 
 def run_main():

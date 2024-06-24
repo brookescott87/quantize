@@ -73,7 +73,7 @@ imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 $(ngl) -f $(imatri
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
-quantize = $(TOASTER_BIN)/quantize $1 $2.tmp $(call qtype,$2) && $(postquantize) $2.tmp && mv $2.tmp $2
+quantize = $(TOASTER_BIN)/quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in && mv $2-in $2
 perplexity := $(TOASTER_BIN)/perplexity
 
 B := $(source)/$(BASEMODEL)
