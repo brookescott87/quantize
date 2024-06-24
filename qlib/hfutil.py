@@ -15,7 +15,7 @@ from .defs import *
 from .misc import *
 from .iobuffer import *
 
-MAX_BLOB_SIZE = 10*MB
+MAX_BLOB_SIZE = 1*MB
 MAX_UPLOAD_SIZE = 50*GB
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
