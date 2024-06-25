@@ -78,15 +78,19 @@ perplexity := $(TOASTER_BIN)/perplexity
 
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
+IMATRIX := $Q.imatrix
 
 all:: quants
 bin:: $Q.bin
-imat:: $Q.imatrix
+imat:: $(IMATRIX)
 klb:: $Q.klb
 ppl:: $(PPLOUT)
 quants:: assets bin imat
 quants:: $(QUANTS)
 assets:: $(ASSETS) README.md
+
+kquants:: QUANTS := $(KQUANTS)
+kquants:: IMATRIX :=
 
 clean::
 	$(if $(wildcard *.tmp),rm -f *.tmp)
@@ -103,7 +107,7 @@ $(source)/$(BASEMODEL):
 $Q.bin: | $B
 	test -f $@ || $(call convert,$B,$(FTYPE),$@)
 
-$(QUANTS):| $Q.bin $Q.imatrix
+$(QUANTS):| $Q.bin $(IMATRIX)
 
 $(imatrix_input):
 	cp $(imatrix_data) $@
@@ -125,7 +129,7 @@ README.md: _meta.json GNUmakefile
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
 
 $(IQUANTS): %.xguf:
-	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
+	$(call quantize,--imatrix $(or $(IMATRIX),$(error No IMATRIX)) $Q.bin,$@)
 
 $(KQUANTS): %.xguf:
 	$(call quantize,$Q.bin,$@)
