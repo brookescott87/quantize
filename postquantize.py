@@ -48,7 +48,7 @@ def split_or_link(xguf: Path, dest: Path):
         for p in xguf.parent.glob(outp.name + '*.gguf'):
             yield(p)
     else:
-        outp.hardlink_to(dest)
+        dest.hardlink_to(xguf)
         yield(dest)
 
 def purge(p, srcp=None):
