@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import qlib
 import argparse
 
@@ -51,6 +52,8 @@ def main():
                 for name in qlib.list_models():
                     print(name)
             return
+        if args.repo_id == '.':
+            args.repo_id = os.path.basename(os.getcwd())
 
         if args.get_head:
             print(r.get_last_commit(args.repo_id))
