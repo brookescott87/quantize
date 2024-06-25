@@ -80,12 +80,17 @@ B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
 
 all:: quants
+bin:: assets
 bin:: $Q.bin
+imat:: bin
 imat:: $Q.imatrix
 klb:: $Q.klb
 ppl:: $(PPLOUT)
-quants:: assets bin imat
-quants:: $(QUANTS)
+kquants:: bin
+kquants:: $(KQUANTS)
+iquants:: imat
+iquants:: $(IQUANTS)
+quants:: iquants kquants
 assets:: $(ASSETS) README.md
 
 clean::
@@ -103,7 +108,8 @@ $(source)/$(BASEMODEL):
 $Q.bin: | $B
 	test -f $@ || $(call convert,$B,$(FTYPE),$@)
 
-$(QUANTS):| $Q.bin $Q.imatrix
+$(QUANTS):| $Q.bin
+$(IQUANTS):| $Q.imatrix
 
 $(imatrix_input):
 	cp $(imatrix_data) $@
