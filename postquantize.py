@@ -66,8 +66,14 @@ def main():
     if xguf.suffix == '.gguf':
         raise ValueError(f"{xguf} can't have .gguf suffix")
     stem = xguf.stem
-    any(map(purge, dirp.glob(stem + '*.gguf'), xguf))
-    any(map(purge, dirp.glob(stem + '*.gguf.sha256')))
+    try:
+        any(map(purge, dirp.glob(stem + '*.gguf'), xguf))
+    except:
+        pass
+    try:
+        any(map(purge, dirp.glob(stem + '*.gguf.sha256')))
+    except:
+        pass
     for outp in split_or_link(xguf):
         hash_file(outp)
 
