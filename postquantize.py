@@ -41,16 +41,15 @@ def gguf_split(xguf, outp):
     if result.returncode:
         raise RuntimeError(f'gguf-split returned {result.returncode}')
 
-def split_or_link(xguf: Path):
+def split_or_link(xguf: Path, dest: Path):
     if xguf.size > qlib.MAX_UPLOAD_SIZE:
-        outp = xguf.with_suffix('') + '-split'
+        outp = dest.with_suffix('') + '-split'
         gguf_split(xguf, outp)
         for p in xguf.parent.glob(outp.name + '*.gguf'):
             yield(p)
     else:
-        outp = xguf.with_suffix('.gguf')
-        outp.hardlink_to(xguf)
-        yield(outp)
+        outp.hardlink_to(dest)
+        yield(dest)
 
 def purge(p, srcp=None):
     if srcp and p.is_newer_than(srcp):
@@ -63,18 +62,34 @@ def purge_all(dirp, pattern, srcp=None):
     for p in list(dirp.glob(pattern + '.sha256')):
         purge(p)
 
+def validate(args):
+    args.rename = False
+    for p in (args.infile, args.outfile):
+        if p and p.suffix == '.gguf':
+            raise ValueError(f"{p} can't have .gguf suffix")
+    if not args.infile.is_file:
+        raise ValueError(f"{args.infile} is not an existing file")
+    if args.outfile:
+        if not args.outfile == args.infile:
+            purge(args.outfile, args.infile)
+            args.rename = True
+    else:
+        args.outfile = args.infile
+    return args
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('xguf', type=Path, help='Name of xguf file to operate on')
-    args = parser.parse_args()
+    parser.add_argument('infile', type=Path, help='Name of gguf file to operate on')
+    parser.add_argument('outfile', type=Path, nargs='?', help='Name of gguf file to operate on')
+    args = validate(parser.parse_args())
     init_paths()
-    dirp = (xguf := args.xguf).parent
-    if xguf.suffix == '.gguf':
-        raise ValueError(f"{xguf} can't have .gguf suffix")
-    stem = xguf.stem
-    purge_all(dirp, stem + '*.gguf', xguf)
-    for outp in split_or_link(xguf):
+    dirp = args.outfile.parent
+    stem = args.outfile.stem
+    purge_all(dirp, stem + '*.gguf', args.infile)
+    for outp in split_or_link(args.infile, args.outfile.with_suffix('.gguf')):
         hash_file(outp)
+    if args.rename:
+        args.infile.rename(args.outfile)
 
 def run_main():
     try:

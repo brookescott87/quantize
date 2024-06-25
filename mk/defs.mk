@@ -66,15 +66,14 @@ ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 
 convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
-convert = $(call xconvert,$(convert_py),$1,$2,$3)
+convert = $(call xconvert,$(convert_py),$1,$2,$3-in) && $(postquantize) $3-in $3
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
 imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
-quantize = $(TOASTER_BIN)/quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in && mv $2-in $2
-perplexity := $(TOASTER_BIN)/perplexity
+quantize = $(TOASTER_BIN)/quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in $2
 
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
@@ -97,6 +96,7 @@ clean:
 upload: assets
 	$(qupload) -i -p -R $(QUANTREPO) .
 
+.NOTPARALLEL: imat $Q.imatrix
 .PHONY: all bin imat klb ppl iquants kquants quants assets clean upload
 
 .DELETE_ON_ERROR:
