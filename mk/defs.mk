@@ -79,25 +79,25 @@ perplexity := $(TOASTER_BIN)/perplexity
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
 
-all:: quants
-bin:: assets
-bin:: $Q.bin
-imat:: bin
-imat:: $Q.imatrix
-klb:: $Q.klb
-ppl:: $(PPLOUT)
-kquants:: bin
-kquants:: $(KQUANTS)
-iquants:: imat
-iquants:: $(IQUANTS)
-quants:: iquants kquants
-assets:: $(ASSETS) README.md
+all: quants
+bin: assets
+bin: $Q.bin
+imat: bin
+imat: $Q.imatrix
+klb: $Q.klb
+ppl: $(PPLOUT)
+iquants: bin imat .WAIT $(IQUANTS)
+kquants: bin $(KQUANTS)
+quants: bin imat .WAIT $(QUANTS)
+assets: $(ASSETS) README.md
 
-clean::
+clean:
 	$(if $(wildcard *.tmp),rm -f *.tmp)
 
-upload::
+upload: assets
 	$(qupload) -i -p -R $(QUANTREPO) .
+
+.PHONY: all bin imat klb ppl iquants kquants quants assets clean upload
 
 .DELETE_ON_ERROR:
 
