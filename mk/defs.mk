@@ -96,8 +96,8 @@ clean:
 upload: assets
 	$(qupload) -i -p -R $(QUANTREPO) .
 
-.NOTPARALLEL: imat $Q.imatrix
 .PHONY: all bin imat klb ppl iquants kquants quants assets clean upload
+.WAIT:
 
 .DELETE_ON_ERROR:
 
