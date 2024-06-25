@@ -57,6 +57,12 @@ def purge(p, srcp=None):
         raise PurgeFailed(p, srcp)
     p.unlink(missing_ok = True)
 
+def purge_all(dirp, pattern, srcp=None):
+    for p in list(dirp.glob(pattern)):
+        purge(p, srcp)
+    for p in list(dirp.glob(pattern + '.sha256')):
+        purge(p)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('xguf', type=Path, help='Name of xguf file to operate on')
@@ -66,14 +72,7 @@ def main():
     if xguf.suffix == '.gguf':
         raise ValueError(f"{xguf} can't have .gguf suffix")
     stem = xguf.stem
-    try:
-        any(map(purge, dirp.glob(stem + '*.gguf'), xguf))
-    except:
-        pass
-    try:
-        any(map(purge, dirp.glob(stem + '*.gguf.sha256')))
-    except:
-        pass
+    purge_all(dirp, stem + '*.gguf', xguf)
     for outp in split_or_link(xguf):
         hash_file(outp)
 
