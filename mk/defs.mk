@@ -54,44 +54,50 @@ mkreadme_opts += $(if $(FULLNAME),--title $(FULLNAME))
 IQTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M IQ3_XXS IQ3_XS IQ3_S IQ3_M IQ4_XS
 KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 
-qtype = $(patsubst $(QUANTMODEL).%.gguf,%,$1)
+qtype = $(patsubst $(QUANTMODEL).%.xguf,%,$1)
 
 FTYPE := $(or $(FTYPE),$(default_ftype))
 
-IQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(IQTYPES))
-KQUANTS := $(patsubst %,$(QUANTMODEL).%.gguf,$(KQTYPES))
+IQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(IQTYPES))
+KQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(KQTYPES))
 QUANTS := $(IQUANTS) $(KQUANTS)
-PPLOUT := $(patsubst %.gguf,%.ppl.out,$(QUANTS))
+PPLOUT := $(patsubst %.xguf,%.ppl.out,$(QUANTS))
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 
 convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
-convert = $(call xconvert,$(convert_py),$1,$2,$3)
+convert = $(call xconvert,$(convert_py),$1,$2,$3-in) && $(postquantize) $3-in $3
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
 imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -c 128 -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
-quantize = $(TOASTER_BIN)/quantize $1 $2 $(call qtype,$2)
-perplexity := $(TOASTER_BIN)/perplexity
+postquantize := python $(SCRIPTDIR)/postquantize.py
+quantize = $(TOASTER_BIN)/quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in $2
 
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
 
-all:: quants
-bin:: $Q.bin
-imat:: $Q.imatrix
-klb:: $Q.klb
-ppl:: $(PPLOUT)
-quants:: assets bin imat
-quants:: $(QUANTS)
-assets:: $(ASSETS) README.md
+all: quants
+bin: assets
+bin: $Q.bin
+imat: bin
+imat: $Q.imatrix
+klb: $Q.klb
+ppl: $(PPLOUT)
+iquants: bin imat .WAIT $(IQUANTS)
+kquants: bin $(KQUANTS)
+quants: bin imat .WAIT $(QUANTS)
+assets: $(ASSETS) README.md
 
-clean::
+clean:
 	$(if $(wildcard *.tmp),rm -f *.tmp)
 
-upload::
+upload: assets
 	$(qupload) -i -p -R $(QUANTREPO) .
+
+.NOTPARALLEL: imat $Q.imatrix
+.PHONY: all bin imat klb ppl iquants kquants quants assets clean upload
 
 .DELETE_ON_ERROR:
 
@@ -102,7 +108,8 @@ $(source)/$(BASEMODEL):
 $Q.bin: | $B
 	test -f $@ || $(call convert,$B,$(FTYPE),$@)
 
-$(QUANTS):| $Q.bin $Q.imatrix
+$(QUANTS):| $Q.bin
+$(IQUANTS):| $Q.imatrix
 
 $(imatrix_input):
 	cp $(imatrix_data) $@
@@ -123,11 +130,11 @@ README.md: _meta.json GNUmakefile
 	rm -f $@
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
 
-$(IQUANTS): %.gguf:
+$(IQUANTS): %.xguf:
 	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
 
-$(KQUANTS): %.gguf:
+$(KQUANTS): %.xguf:
 	$(call quantize,$Q.bin,$@)
 
-%.ppl.out: %.gguf $Q.klb
+%.ppl.out: %.xguf $Q.klb
 	$(perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
