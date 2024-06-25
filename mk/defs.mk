@@ -91,6 +91,7 @@ assets:: $(ASSETS) README.md
 
 kquants:: QUANTS := $(KQUANTS)
 kquants:: IMATRIX :=
+kquants:: quants
 
 clean::
 	$(if $(wildcard *.tmp),rm -f *.tmp)
