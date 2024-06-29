@@ -58,7 +58,9 @@ qtype = $(patsubst $(QUANTMODEL).%.xguf,%,$1)
 
 FTYPE := $(or $(FTYPE),$(default_ftype))
 
+ifndef NO_IMATRIX
 IQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(IQTYPES))
+endif
 KQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(KQTYPES))
 QUANTS := $(IQUANTS) $(KQUANTS)
 PPLOUT := $(patsubst %.xguf,%.ppl.out,$(QUANTS))
@@ -79,15 +81,14 @@ B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
 
 all: quants
-bin: assets
-bin: $Q.bin
+bin: assets $Q.bin
 imat: bin
+ifndef NO_IMATRIX
 imat: $Q.imatrix
+endif
 klb: $Q.klb
 ppl: $(PPLOUT)
-iquants: bin imat .WAIT $(IQUANTS)
-kquants: bin $(KQUANTS)
-quants: bin imat .WAIT $(QUANTS)
+quants: bin imat $(QUANTS)
 assets: $(ASSETS) README.md
 
 clean:
@@ -96,8 +97,7 @@ clean:
 upload: assets
 	$(qupload) -i -p -R $(QUANTREPO) .
 
-.PHONY: all bin imat klb ppl iquants kquants quants assets clean upload
-.WAIT:
+.PHONY: all bin imat klb ppl quants assets clean upload
 
 .DELETE_ON_ERROR:
 
@@ -109,13 +109,16 @@ $Q.bin: | $B
 	test -f $@ || $(call convert,$B,$(FTYPE),$@)
 
 $(QUANTS):| $Q.bin
-$(IQUANTS):| $Q.imatrix
+
+ifndef NO_IMATRIX
+$(QUANTS):| $Q.imatrix
 
 $(imatrix_input):
 	cp $(imatrix_data) $@
 
 %.imatrix: | %.bin $(imatrix_input)
 	$(call imatrix,$*.bin,$@)
+endif
 
 _meta.json: $Q.bin
 	python $(MAKEDIR)/meta.py $(META_OPTS) $@ $<
@@ -130,8 +133,10 @@ README.md: _meta.json GNUmakefile
 	rm -f $@
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
 
+ifndef NO_IMATRIX
 $(IQUANTS): %.xguf:
 	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
+endif
 
 $(KQUANTS): %.xguf:
 	$(call quantize,$Q.bin,$@)
