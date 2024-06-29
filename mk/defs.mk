@@ -98,7 +98,7 @@ $Q.bin: | $B
 $(QUANTS):| $Q.bin
 
 ifndef NO_IMATRIX
-include imatrix.mk
+include $(MAKEDIR)/imatrix.mk
 endif
 
 _meta.json: $Q.bin
