@@ -88,9 +88,11 @@ upload: assets
 
 .DELETE_ON_ERROR:
 
+ifdef DOWNLOAD
 $(source)/$(BASEMODEL):
 	mkdir -p $(@D)
 	python $(SCRIPTDIR)/download_model.py $(BASEREPO) $@
+endif
 
 $Q.bin: | $B
 	test -f $@ || $(call convert,$B,$(FTYPE),$@)
