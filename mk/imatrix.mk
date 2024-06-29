@@ -1,3 +1,6 @@
+#imatrix_default_dataset := 20k_random_data.txt
+imatrix_default_dataset := groups_merged.txt
+
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
 IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
 
