@@ -38,7 +38,7 @@ BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
-ngl := $(addprefix -ngl ,$(or $(NGL),$(N_GPU_LAYERS)))
+FTYPE := $(or $(FTYPE),$(default_ftype))
 
 PPL_DATASET := $(or $(PPL_DATASET),$(ppl_default_dataset))
 ppl_input := $(DATADIR)/$(PPL_DATASET)
@@ -48,17 +48,17 @@ mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
 mkreadme_opts += $(if $(AUTHOR),--author $(AUTHOR))
 mkreadme_opts += $(if $(FULLNAME),--title $(FULLNAME))
 
+ngl := $(addprefix -ngl ,$(or $(NGL),$(N_GPU_LAYERS)))
+
 IQTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M IQ3_XXS IQ3_XS IQ3_S IQ3_M IQ4_XS
 KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 
-qtype = $(patsubst $(QUANTMODEL).%.xguf,%,$1)
-
-FTYPE := $(or $(FTYPE),$(default_ftype))
 KQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(KQTYPES))
 QUANTS := $(KQUANTS)
 PPLOUT := $(patsubst %.xguf,%.ppl.out,$(QUANTS))
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 
+qtype = $(patsubst $(QUANTMODEL).%.xguf,%,$1)
 convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
 convert = $(call xconvert,$(convert_py),$1,$2,$3-in) && $(postquantize) $3-in $3
