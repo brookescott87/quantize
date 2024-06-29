@@ -40,9 +40,6 @@ QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
 ngl := $(addprefix -ngl ,$(or $(NGL),$(N_GPU_LAYERS)))
 
-IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
-IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
-
 PPL_DATASET := $(or $(PPL_DATASET),$(ppl_default_dataset))
 ppl_input := $(DATADIR)/$(PPL_DATASET)
 
@@ -57,21 +54,14 @@ KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
 qtype = $(patsubst $(QUANTMODEL).%.xguf,%,$1)
 
 FTYPE := $(or $(FTYPE),$(default_ftype))
-
-ifndef NO_IMATRIX
-IQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(IQTYPES))
-endif
 KQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(KQTYPES))
-QUANTS := $(IQUANTS) $(KQUANTS)
+QUANTS := $(KQUANTS)
 PPLOUT := $(patsubst %.xguf,%.ppl.out,$(QUANTS))
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 
 convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
 convert = $(call xconvert,$(convert_py),$1,$2,$3-in) && $(postquantize) $3-in $3
-imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
-imatrix_input := imatrix_dataset.txt
-imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
@@ -81,11 +71,8 @@ B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
 
 all: quants
-bin: assets $Q.bin
+bin: $Q.bin
 imat: bin
-ifndef NO_IMATRIX
-imat: $Q.imatrix
-endif
 klb: $Q.klb
 ppl: $(PPLOUT)
 quants: bin imat $(QUANTS)
@@ -111,13 +98,7 @@ $Q.bin: | $B
 $(QUANTS):| $Q.bin
 
 ifndef NO_IMATRIX
-$(QUANTS):| $Q.imatrix
-
-$(imatrix_input):
-	cp $(imatrix_data) $@
-
-%.imatrix: | %.bin $(imatrix_input)
-	$(call imatrix,$*.bin,$@)
+include imatrix.mk
 endif
 
 _meta.json: $Q.bin
@@ -132,11 +113,6 @@ $(ASSETS): %.png: | $(ASSETDIR)/%.png
 README.md: _meta.json GNUmakefile
 	rm -f $@
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
-
-ifndef NO_IMATRIX
-$(IQUANTS): %.xguf:
-	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
-endif
 
 $(KQUANTS): %.xguf:
 	$(call quantize,$Q.bin,$@)
