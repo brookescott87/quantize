@@ -77,7 +77,7 @@ ifdef old_convert
 convert_py := convert.py --pad-vocab
 defftype := fp16
 else
-convert_py := convert-hf-to-gguf.py $(if $(PRETOKENIZER),--fallback-pre=$(PRETOKENIZER))
+convert_py := convert_hf_to_gguf.py $(if $(PRETOKENIZER),--fallback-pre=$(PRETOKENIZER))
 defftype := auto
 endif
 
