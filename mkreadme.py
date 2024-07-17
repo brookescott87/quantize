@@ -91,7 +91,7 @@ def main():
         config = {}
     else:
         model_info = hfapi.model_info(str(repo))
-        card_data = model_info.card_data
+        card_data = model_info.card_data or huggingface_hub.repocard_data.ModelCardData(model_name = repo.name)
         config = json.loads(hfs.cat_file(repo / 'config.json'))
 
         if not card_data.model_name == repo.name:
