@@ -71,11 +71,11 @@ xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVE
 convert = $(call xconvert,$(convert_py),$1,$2,$3-in) && $(postquantize) $3-in $3
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
-imatrix = $(TOASTER_BIN)/imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
+imatrix = $(TOASTER_BIN)/llama-imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
-quantize = $(TOASTER_BIN)/quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in $2
+quantize = $(TOASTER_BIN)/llama-quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in $2
 
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
@@ -117,14 +117,14 @@ $(imatrix_input):
 	cp $(imatrix_data) $@
 
 %.imatrix: | %.bin $(imatrix_input)
-	$(call imatrix,$*.bin,$@)
+	$(call llama-imatrix,$*.bin,$@)
 endif
 
 _meta.json: $Q.bin
 	python $(MAKEDIR)/meta.py $(META_OPTS) $@ $<
 
 %.klb: %.bin $(ppl_input)
-	$(perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
+	$(llama-perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
 
 $(ASSETS): %.png: | $(ASSETDIR)/%.png
 	cp $| $@
@@ -135,11 +135,11 @@ README.md: _meta.json GNUmakefile
 
 ifndef NO_IMATRIX
 $(IQUANTS): %.xguf:
-	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
+	$(call llama-quantize,--imatrix $Q.imatrix $Q.bin,$@)
 endif
 
 $(KQUANTS): %.xguf:
-	$(call quantize,$Q.bin,$@)
+	$(call llama-quantize,$Q.bin,$@)
 
 %.ppl.out: %.xguf $Q.klb
-	$(perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
+	$(llama-perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@

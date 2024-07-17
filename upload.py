@@ -12,7 +12,7 @@ import argparse
 
 MAX_UPLOAD_SIZE = 50_000_000_000
 TOASTER = Path(os.environ['TOASTER_ROOT'])
-gguf_split_exe = TOASTER/'bin'/'gguf-split'
+gguf_split_exe = TOASTER/'bin'/'llama-gguf-split'
 
 hfapi = huggingface_hub.HfApi()
 
@@ -40,7 +40,7 @@ def next_file(dirp):
 def gguf_split(p: Path):
     result = subprocess.run([gguf_split_exe, '--split-max-size', '50G', p])
     if result.returncode:
-        raise RuntimeError(f'gguf-split returned {result.returncode}')
+        raise RuntimeError(f'llama-gguf-split returned {result.returncode}')
     remove_file(p)
 
 def upload_file(repo_id: str, p: Path, new_name:str = None) -> bool:

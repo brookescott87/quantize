@@ -65,9 +65,9 @@ endif
 
 # xquantize($1=out, $2=type, $3=in[, $4=imat])
 xquantize = \
-	$(TOASTER_BIN)/quantize --imatrix $4 $3 $1 $2
+	$(TOASTER_BIN)/llama-quantize --imatrix $4 $3 $1 $2
 
-# quantize($1=base, $2=ins, $3=out, $4=install opts)
+# llama-quantize($1=base, $2=ins, $3=out, $4=install opts)
 quantize = \
 	$(call xquantize,$3,$(call qtype,$3),$(filter %.bin,$2),$(filter %.imatrix,$2)) && $(call install,$3,$1-GGUF,$4)
 
@@ -83,7 +83,7 @@ endif
 
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(DATADIR)/20k_random_data.txt
-imatrix = $(TOASTER_BIN)/imatrix --chunks 128 -c 128 -m $(filter %.bin,$1) -f $(filter %.txt,$1) -o $2.tmp && mv $2.tmp $2
+imatrix = $(TOASTER_BIN)/llama-imatrix --chunks 128 -c 128 -m $(filter %.bin,$1) -f $(filter %.txt,$1) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 
 ifdef ABORT
@@ -109,7 +109,7 @@ $(OUTPUT_ROOT)/%-GGUF/README.md: | $(MODELBASE)/% $(OUTPUT_ROOT)/%-GGUF
 	$(call convert,$(MODELBASE)/$(notdir $*),$(FTYPE),$@)
 
 %.imatrix:| %.bin imatrix_dataset.txt
-	$(call imatrix,$|,$@)
+	$(call llama-imatrix,$|,$@)
 
 imatrix_dataset.txt:
 	cp $(imatrix_data) $@
@@ -117,48 +117,48 @@ imatrix_dataset.txt:
 .DELETE_ON_ERROR:
 
 %.Q2_K.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q3_K_S.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q3_K_M.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q3_K_L.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q4_K_S.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q4_K_M.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q5_K_S.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q5_K_M.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q6_K.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q8_0.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.Q2_K_S.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ2_XXS.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ2_XS.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ3_XS.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ3_XXS.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ1_S.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ1_M.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 # %.IQ4_NL.gguf:| %.bin %.imatrix
-# 	$(call quantize,$*,$|,$@)
+# 	$(call llama-quantize,$*,$|,$@)
 %.IQ3_S.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ3_M.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ2_S.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ2_M.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)
 %.IQ4_XS.gguf:| %.bin %.imatrix
-	$(call quantize,$*,$|,$@)
+	$(call llama-quantize,$*,$|,$@)

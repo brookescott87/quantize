@@ -23,7 +23,7 @@ def init_paths():
     else:
         raise RuntimeError('TOASTER_ROOT environment variable is not set')
     bin = chk(toaster_root / 'bin')
-    gguf_split_exe = chk(bin / 'gguf-split')
+    gguf_split_exe = chk(bin / 'llama-gguf-split')
 
 def hash_file(p: Path):
     if p.exists() and p.is_file():
@@ -39,7 +39,7 @@ def hash_file(p: Path):
 def gguf_split(xguf, outp):
     result = subprocess.run([gguf_split_exe, '--split-max-size', '50G', str(xguf), str(outp)])
     if result.returncode:
-        raise RuntimeError(f'gguf-split returned {result.returncode}')
+        raise RuntimeError(f'llama-gguf-split returned {result.returncode}')
 
 def split_or_link(xguf: Path, dest: Path):
     if xguf.size > qlib.MAX_UPLOAD_SIZE:

@@ -12,7 +12,7 @@ import qlib
 MAX_UPLOAD_SIZE = 50_000_000_000
 TOASTER = Path(os.environ['TOASTER_ROOT'])
 HF_DEFAULT_ORGANIZATION = os.getenv('HF_DEFAULT_ORGANIZATION')
-gguf_split_exe = TOASTER/'bin'/'gguf-split'
+gguf_split_exe = TOASTER/'bin'/'llama-gguf-split'
 shard_rx = re.compile('.*-split-\d{5}-of-\d{5}$')
 
 def oversize_ggufs(d: Path) -> Iterator[Path]:
@@ -21,7 +21,7 @@ def oversize_ggufs(d: Path) -> Iterator[Path]:
 def gguf_split(p: Path, keep=False):
     result = subprocess.run([gguf_split_exe, '--split-max-size', '50G', p])
     if result.returncode:
-        raise RuntimeError(f'gguf-split returned {result.returncode}')
+        raise RuntimeError(f'llama-gguf-split returned {result.returncode}')
     if keep:
         p.rename(p.with_suffix('.dead'))
     else:
