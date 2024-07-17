@@ -117,7 +117,7 @@ $(imatrix_input):
 	cp $(imatrix_data) $@
 
 %.imatrix: | %.bin $(imatrix_input)
-	$(call llama-imatrix,$*.bin,$@)
+	$(call imatrix,$*.bin,$@)
 endif
 
 _meta.json: $Q.bin
@@ -135,11 +135,11 @@ README.md: _meta.json GNUmakefile
 
 ifndef NO_IMATRIX
 $(IQUANTS): %.xguf:
-	$(call llama-quantize,--imatrix $Q.imatrix $Q.bin,$@)
+	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
 endif
 
 $(KQUANTS): %.xguf:
-	$(call llama-quantize,$Q.bin,$@)
+	$(call quantize,$Q.bin,$@)
 
 %.ppl.out: %.xguf $Q.klb
 	$(llama-perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
