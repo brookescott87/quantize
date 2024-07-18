@@ -83,16 +83,15 @@ qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
 quantize = $(TOASTER_BIN)/llama-quantize $1 $2 $(call qtype,$2)
 
-all: quants
-bin: assets $Q.bin
-imat: bin
+bin imat: $Q.bin
 ifndef NO_IMATRIX
 imat: $Q.imatrix
 endif
 klb: $Q.klb
 ppl: $(PPLOUT)
-quants: bin imat $(QUANTS)
-assets: $(ASSETS) README.md
+all quants: $Q.$F.xguf
+all quants: $(QUANTS)
+all assets: $(ASSETS) README.md
 
 tidy:
 	rm -f *.tmp tmp
