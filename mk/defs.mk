@@ -35,6 +35,8 @@ ppl_default_dataset := wiki_test.txt
 #default_ftype := auto
 default_ftype := F32
 
+FTYPE := $(or $(FTYPE),$(default_ftype),auto)
+
 AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
 BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
@@ -57,8 +59,6 @@ IQTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M IQ3_XXS IQ3_XS IQ3_S IQ3_M IQ4
 KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K $(filter-out $(FTYPE),Q8_0)
 
 qtype = $(firstword $(subst ., ,$(patsubst $(QUANTMODEL).%,%,$1)))
-
-FTYPE := $(or $(FTYPE),$(default_ftype))
 
 ifndef NO_IMATRIX
 IQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(IQTYPES))
