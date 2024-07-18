@@ -44,6 +44,7 @@ QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
+F := $(FTYPE)
 
 ngl := $(addprefix -ngl ,$(or $(NGL),$(N_GPU_LAYERS)))
 
@@ -72,15 +73,15 @@ PPLOUT := $(patsubst %.xguf,%.ppl.out,$(QUANTS))
 ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 
 convert_py := convert_hf_to_gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
-xconvert = python $(TOASTER_BIN)/$1 --outtype=$(or $3,auto) --outfile=$4 $(CONVERT_OPTS) $2
-convert = $(call xconvert,$(convert_py),$1,$2,$3-in) && $(postquantize) $3-in $3
+xconvert = python $(TOASTER_BIN)/$1 --outtype=$3 --outfile=$(patsubst $Q.auto,$Q.{FTYPE},$4) $(CONVERT_OPTS) $2
+convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
 imatrix_input := imatrix_dataset.txt
 imatrix = $(TOASTER_BIN)/llama-imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
-quantize = $(TOASTER_BIN)/llama-quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in $2
+quantize = $(TOASTER_BIN)/llama-quantize $1 $2 $(call qtype,$2)
 
 all: quants
 bin: assets $Q.bin
@@ -107,8 +108,11 @@ $(source)/$(BASEMODEL):
 	mkdir -p $(@D)
 	python $(SCRIPTDIR)/download_model.py $(BASEREPO) $@
 
-$Q.bin: | $B
-	test -f $@ || $(call convert,$B,$(FTYPE),$@)
+$Q.$F.xguf-in: | $B
+	test -f $@ || $(call convert,$B,$F,$@)
+
+$Q.bin: $Q.$F.xguf-in
+	rm -f $@ && ln $< $@
 
 $(QUANTS):| $Q.bin
 
@@ -136,12 +140,15 @@ README.md: _meta.json GNUmakefile
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
 
 ifndef NO_IMATRIX
-$(IQUANTS): %.xguf:
+$(IQUANTS:.xguf=.xguf-in): %:
 	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
 endif
 
-$(KQUANTS): %.xguf:
+$(KQUANTS:.xguf=.xguf-in): %:
 	$(call quantize,$Q.bin,$@)
+
+%.xguf: %.xguf-in
+	$(postquantize) $< $@
 
 %.ppl.out: %.xguf $Q.klb
 	$(llama-perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
