@@ -42,6 +42,9 @@ BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
+B := $(source)/$(BASEMODEL)
+Q := $(QUANTMODEL)
+
 ngl := $(addprefix -ngl ,$(or $(NGL),$(N_GPU_LAYERS)))
 
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
@@ -78,9 +81,6 @@ mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
 quantize = $(TOASTER_BIN)/llama-quantize $1 $2-in $(call qtype,$2) && $(postquantize) $2-in $2
-
-B := $(source)/$(BASEMODEL)
-Q := $(QUANTMODEL)
 
 all: quants
 bin: assets $Q.bin
