@@ -94,13 +94,16 @@ ppl: $(PPLOUT)
 quants: bin imat $(QUANTS)
 assets: $(ASSETS) README.md
 
-clean:
-	$(if $(wildcard *.tmp),rm -f *.tmp)
+tidy:
+	rm -f *.tmp tmp
+
+clean: tidy
+	rm -f *.xguf *.xguf-in *.gguf *.sha256 *.bin *.imatrix *.png *.json *.md imatrix_dataset.txt
 
 upload: assets
 	$(qupload) -i -p -R $(QUANTREPO) .
 
-.PHONY: all bin imat klb ppl quants assets clean upload
+.PHONY: all bin imat klb ppl quants assets clean tidy upload
 
 .SECONDARY:
 .DELETE_ON_ERROR:
