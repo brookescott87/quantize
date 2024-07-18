@@ -33,7 +33,7 @@ all:;
 imatrix_default_dataset := groups_merged.txt
 ppl_default_dataset := wiki_test.txt
 #default_ftype := auto
-default_ftype := f32
+default_ftype := F32
 
 AUTHOR := $(or $(AUTHOR),$(firstword $(subst /, ,$(BASEREPO))))
 BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
