@@ -27,6 +27,8 @@ $(error ORGANIZATION is not set)
 endif
 endif
 
+all:;
+
 #imatrix_default_dataset := 20k_random_data.txt
 imatrix_default_dataset := groups_merged.txt
 ppl_default_dataset := wiki_test.txt
