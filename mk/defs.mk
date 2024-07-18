@@ -54,7 +54,7 @@ mkreadme_opts += $(if $(AUTHOR),--author $(AUTHOR))
 mkreadme_opts += $(if $(FULLNAME),--title $(FULLNAME))
 
 IQTYPES := IQ1_S IQ1_M IQ2_XXS IQ2_XS IQ2_S IQ2_M IQ3_XXS IQ3_XS IQ3_S IQ3_M IQ4_XS
-KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K Q8_0
+KQTYPES := Q3_K_S Q3_K_M Q3_K_L Q4_K_S Q4_K_M Q5_K_S Q5_K_M Q6_K $(filter-out $(FTYPE),Q8_0)
 
 qtype = $(firstword $(subst ., ,$(patsubst $(QUANTMODEL).%,%,$1)))
 
