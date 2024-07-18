@@ -102,6 +102,7 @@ upload: assets
 
 .PHONY: all bin imat klb ppl quants assets clean upload
 
+.SECONDARY:
 .DELETE_ON_ERROR:
 
 $(source)/$(BASEMODEL):
