@@ -104,6 +104,7 @@ upload: assets
 
 .PHONY: all bin imat klb ppl quants assets clean tidy upload
 
+.SUFFIXES:
 .SECONDARY:
 .DELETE_ON_ERROR:
 
