@@ -30,7 +30,7 @@ endif
 all:;
 
 #imatrix_default_dataset := 20k_random_data.txt
-imatrix_default_dataset := groups_merged.txt
+imatrix_default_dataset := https://github.com/ggerganov/llama.cpp/files/15440637/groups_merged-enhancedV3.txt
 ppl_default_dataset := wiki_test.txt
 #default_ftype := auto
 default_ftype := F32
@@ -54,6 +54,8 @@ IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPT
 PPL_DATASET := $(or $(PPL_DATASET),$(ppl_default_dataset))
 ppl_input := $(DATADIR)/$(PPL_DATASET)
 
+isurl = $(filter http://% https://% ftp://%,$1)
+
 mkreadme_opts :=
 mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
 mkreadme_opts += $(if $(AUTHOR),--author $(AUTHOR))
@@ -75,9 +77,12 @@ ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
 convert_py := convert_hf_to_gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
 xconvert = python $(TOASTER_BIN)/$1 --outtype=$3 --outfile=$(patsubst $Q.auto,$Q.{FTYPE},$4) $(CONVERT_OPTS) $2
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
-imatrix_data := $(DATADIR)/$(IMATRIX_DATASET)
-imatrix_input := imatrix_dataset.txt
-imatrix = $(TOASTER_BIN)/llama-imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2.tmp && mv $2.tmp $2
+imatrix_rename := python $(SCRIPTDIR)/imatrix_rename.py
+imatrix_data := $(notdir $(IMATRIX_DATASET))
+imatrix_url := $(call isurl,$(IMATRIX_DATASET))
+imatrix_src := $(or $(imatrix_url),$(imatrix_data))
+imatrix_input := $(DATADIR)/$(imatrix_data)
+imatrix = $(TOASTER_BIN)/llama-imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2
 mkreadme := python $(SCRIPTDIR)/mkreadme.py
 qupload := python $(SCRIPTDIR)/qupload.py
 postquantize := python $(SCRIPTDIR)/postquantize.py
@@ -123,11 +128,13 @@ $(QUANTS:=-in):| $Q.bin
 ifndef NO_IMATRIX
 $(QUANTS:=-in):| $Q.imatrix
 
+ifdef imatrix_url
 $(imatrix_input):
-	cp $(imatrix_data) $@
+	wget -O $@ "${imatrix_url}"
+endif
 
 %.imatrix: | %.bin $(imatrix_input)
-	$(call imatrix,$*.bin,$@)
+	$(call imatrix,$*.bin,$@.tmp) && $(imatrix_rename) --dataset $(imatrix_src) $@.tmp $@
 endif
 
 _meta.json: $Q.bin
