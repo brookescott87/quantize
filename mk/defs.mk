@@ -117,10 +117,10 @@ $Q.$F.xguf-in: | $B
 $Q.bin: $Q.$F.xguf-in
 	rm -f $@ && ln $< $@
 
-$(QUANTS):| $Q.bin
+$(QUANTS:=-in):| $Q.bin
 
 ifndef NO_IMATRIX
-$(QUANTS):| $Q.imatrix
+$(QUANTS:=-in):| $Q.imatrix
 
 $(imatrix_input):
 	cp $(imatrix_data) $@
