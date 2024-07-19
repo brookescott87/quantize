@@ -143,11 +143,11 @@ README.md: _meta.json GNUmakefile
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
 
 ifndef NO_IMATRIX
-$(IQUANTS:.xguf=.xguf-in): %:
+$(IQUANTS:=-in): %:
 	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
 endif
 
-$(KQUANTS:.xguf=.xguf-in): %:
+$(KQUANTS:=-in): %:
 	$(call quantize,$Q.bin,$@)
 
 %.xguf: %.xguf-in
