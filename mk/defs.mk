@@ -3,12 +3,6 @@ source := ./basemodel
 
 parent = $(patsubst %/,%,$(dir $1))
 
-MAKEDIR := $(call parent,$(lastword $(MAKEFILE_LIST)))
-SRCDIR := $(call parent,$(MAKEDIR))
-SCRIPTDIR := $(SRCDIR)
-DATADIR := $(SRCDIR)/data
-ASSETDIR := $(SRCDIR)/assets
-
 ifndef BASEREPO
 $(error BASEREPO is not set)
 endif
@@ -17,8 +11,8 @@ ifndef TOASTER_ROOT
 $(error TOASTER_ROOT is not set)
 endif
 
-export TOASTER_BIN := $(TOASTER_ROOT)/bin
-export TOASTER_LIB := $(TOASTER_ROOT)/lib
+S := $(call parent,$(call parent,$(CURRENT_MAKEFILE)))
+T := $(TOASTER_ROOT)
 
 ifndef ORGANIZATION
 ifdef HF_DEFAULT_ORGANIZATION
@@ -51,7 +45,7 @@ IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
 IMATRIX_OPTS := $(if $(IMATRIX_CHUNKS),--chunks $(IMATRIX_CHUNKS)) $(IMATRIX_OPTS)
 
 PPL_DATASET := $(or $(PPL_DATASET),$(ppl_default_dataset))
-ppl_input := $(DATADIR)/$(PPL_DATASET)
+ppl_input := $S/data/$(PPL_DATASET)
 
 isurl = $(filter http://% https://% ftp://%,$1)
 
@@ -73,21 +67,21 @@ endif
 KQUANTS := $(patsubst %,$(QUANTMODEL).%.xguf,$(KQTYPES))
 QUANTS := $(IQUANTS) $(KQUANTS)
 PPLOUT := $(patsubst %.xguf,%.ppl.out,$(QUANTS))
-ASSETS := $(notdir $(wildcard $(ASSETDIR)/*.png))
+ASSETS := $(notdir $(wildcard $S/assets/*.png))
 
 convert_py := convert_hf_to_gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
-xconvert = python $(TOASTER_BIN)/$1 --outtype=$3 --outfile=$(patsubst $Q.auto,$Q.{FTYPE},$4) $(CONVERT_OPTS) $2
+xconvert = python $T/bin/$1 --outtype=$3 --outfile=$(patsubst $Q.auto,$Q.{FTYPE},$4) $(CONVERT_OPTS) $2
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
-imatrix_rename := python $(SCRIPTDIR)/imatrix_rename.py
+imatrix_rename := python $S/imatrix_rename.py
 imatrix_data := $(notdir $(IMATRIX_DATASET))
 imatrix_url := $(call isurl,$(IMATRIX_DATASET))
 imatrix_src := $(or $(imatrix_url),$(imatrix_data))
-imatrix_input := $(DATADIR)/$(imatrix_data)
-imatrix = $(TOASTER_BIN)/llama-imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2
-mkreadme := python $(SCRIPTDIR)/mkreadme.py
-qupload := python $(SCRIPTDIR)/qupload.py
-postquantize := python $(SCRIPTDIR)/postquantize.py
-quantize = $(TOASTER_BIN)/llama-quantize $1 $2 $(call qtype,$2)
+imatrix_input := $S/data/$(imatrix_data)
+imatrix = $T/bin/llama-imatrix $(IMATRIX_OPTS) -m $1 $(ngl) -f $(imatrix_input) -o $2
+mkreadme := python $S/mkreadme.py
+qupload := python $S/qupload.py
+postquantize := python $S/postquantize.py
+quantize = $T/bin/llama-quantize $1 $2 $(call qtype,$2)
 
 bin imat: $Q.bin
 ifndef NO_IMATRIX
@@ -141,12 +135,12 @@ endif
 endif
 
 _meta.json: $Q.bin
-	python $(MAKEDIR)/meta.py $(META_OPTS) $@ $<
+	python $S/mk/meta.py $(META_OPTS) $@ $<
 
 %.klb: %.bin $(ppl_input)
 	$(llama-perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
 
-$(ASSETS): %.png: | $(ASSETDIR)/%.png
+$(ASSETS): %.png: | $S/assets/%.png
 	cp $| $@
 
 README.md: _meta.json GNUmakefile
