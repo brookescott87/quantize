@@ -1,3 +1,4 @@
+CURRENT_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 source := ./basemodel
 
 parent = $(patsubst %/,%,$(dir $1))
