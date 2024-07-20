@@ -114,9 +114,11 @@ upload: assets
 .SECONDARY:
 .DELETE_ON_ERROR:
 
+ifdef DOWNLOAD
 $(source)/$(BASEMODEL):
 	mkdir -p $(@D)
-	python $(SCRIPTDIR)/download_model.py $(BASEREPO) $@
+	python $S/download_model.py $(BASEREPO) $@
+endif
 
 $Q.$F.xguf-in: | $B
 	test -f $@ || $(call convert,$B,$F,$@)
