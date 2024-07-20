@@ -82,6 +82,7 @@ mkreadme := python $S/mkreadme.py
 qupload := python $S/qupload.py
 postquantize := python $S/postquantize.py
 quantize = $T/bin/llama-quantize $1 $2 $(call qtype,$2)
+perplexity := $T/bin/llama-perplexity
 
 bin imat: $Q.bin
 ifndef NO_IMATRIX
@@ -138,7 +139,7 @@ _meta.json: $Q.bin
 	python $S/mk/meta.py $(META_OPTS) $@ $<
 
 %.klb: %.bin $(ppl_input)
-	$(llama-perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
+	$(perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
 
 $(ASSETS): %.png: | $S/assets/%.png
 	cp $| $@
@@ -159,4 +160,4 @@ $(KQUANTS:=-in): %:
 	$(postquantize) $< $@
 
 %.ppl.out: %.xguf $Q.klb
-	$(llama-perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
+	$(perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
