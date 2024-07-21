@@ -103,6 +103,7 @@ def main():
         ri = qlib.hfapi.repo_info(repo_id)
         if ri.private:
             qlib.hfapi.update_repo_visibility(repo_id, private = False)
+    print(f'Model is at https://huggingface.co/{repo_id}')
 
 if __name__ == '__main__':
     main()
