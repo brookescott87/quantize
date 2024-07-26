@@ -34,6 +34,8 @@ def main():
                         help='Force overwrite existing files')
     parser.add_argument('--description', '--desc', '-s', type=str, default=None,
                         help='Description of the model')
+    parser.add_argument('--llama-bpe', '-L', action='store_true',
+                        help='Use llama-bpe pretokenizer')
     parser.add_argument('--test', action='store_true',
                         help='Test mode')
     args = parser.parse_args()
@@ -92,6 +94,8 @@ def main():
         defvar(f, 'TOASTER_ROOT', os.getenv('TOASTER_ROOT'))
         defvar(f, 'BASEREPO', baserepo)
         defvar(f, 'QUANTMODEL', quantmodel)
+        if args.llama_bpe:
+            defvar(f, 'PRETOKENIZER', 'llama-bpe')
         defvar(f, 'AUTHOR', basemodel.owner)
         defvar(f, 'BASEMODEL', basemodel.model_name)
         defvar(f, 'CATNAME', basemodel.catalog_name)
