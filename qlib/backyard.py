@@ -7,6 +7,7 @@ from operator import attrgetter
 from typing import List,Tuple
 from datetime import datetime as dt, UTC
 import requests
+from requests.models import Response
 from .defs import *
 from . import hfutil
 from . import misc
@@ -285,9 +286,9 @@ class PostRequest(Request):
         return requests.post(url, **kwargs)
 
 class RequestFailed(Exception):
-    def __init__(self, request):
-        self.request = request
-        super().__init__(f'Request failed: {request.reason}')
+    def __init__(self, response:Response):
+        self.response = response
+        super().__init__(f'Request failed: {response.reason}')
 
 class Requestor:
     uuid_rx = re.compile('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}')

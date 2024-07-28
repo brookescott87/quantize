@@ -78,7 +78,7 @@ def main():
 
     except qlib.backyard.RequestFailed as ex:
         print(f"Request failed: {ex}")
-        rex = ex.request
+        rex = ex.response
         print(f" URL: {rex.url}")
         print(f" JSON: {rex.json()}")
 
