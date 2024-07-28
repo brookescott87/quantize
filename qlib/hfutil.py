@@ -135,6 +135,10 @@ class Model(ProxyObject):
             raise FileNotFoundError(f"'{filename}' not found in model {self.repo_id}")
 
     @property
+    def is_quant(self):
+        return False
+
+    @property
     def url(self):
         return 'https://huggingface.co/' + self.repo_id
 
@@ -318,6 +322,10 @@ class QuantModel(Model):
 
         def __call__(self, qm):
             return self.cp.func(qm.base_model)
+
+    @property
+    def is_quant(self):
+        return True
 
     @property
     def model_name(self):
