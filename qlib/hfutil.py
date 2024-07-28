@@ -211,7 +211,7 @@ class Model(ProxyObject):
             if not hfapi.repo_exists(repo_id):
                 raise ValueError(f'Repository {repo_id} does not exist')
             if (instcls := cls) is Model:
-                instcls = QuantModel if repo_id.endswith('-GGUF') else BaseModel
+                instcls = QuantModel if '-GGUF-' in repo_id or repo_id.endswith('-GGUF') else BaseModel
             if not (obj := object.__new__(instcls)):
                 raise RuntimeError(f"Failed to create object of type {instcls}")
             obj._repo_id = repo_id
