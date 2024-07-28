@@ -335,3 +335,5 @@ class Requestor:
 
     def submit(self, manifest: Manifest):
         return self.request('addPendingApproval', PostRequest(manifest.generate()))
+
+Manifest.Requestor = Requestor

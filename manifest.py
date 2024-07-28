@@ -42,7 +42,7 @@ def main():
                         help='Repository to generate manifest for')
     args = parser.parse_args()
 
-    r = qlib.backyard.Requestor(args.request_token, args.canary)
+    r = qlib.backyard.Manifest.Requestor(args.request_token, args.canary)
 
     try:
         if not args.repo_id:
