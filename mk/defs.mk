@@ -49,6 +49,10 @@ ppl_input := $S/data/$(PPL_DATASET)
 
 isurl = $(filter http://% https://% ftp://%,$1)
 
+ifndef REQUANT
+README := README.md
+endif
+
 mkreadme_opts :=
 mkreadme_opts += $(if $(DESCRIPTION),--description $(DESCRIPTION))
 mkreadme_opts += $(if $(AUTHOR),--author $(AUTHOR))
@@ -92,13 +96,13 @@ klb: $Q.klb
 ppl: $(PPLOUT)
 all quants: $Q.$F.xguf
 all quants: $(QUANTS)
-all assets: $(ASSETS) README.md
+all assets: $(ASSETS) $(README)
 
 tidy:
 	rm -f *.tmp tmp
 
 clean: tidy
-	rm -f *.xguf *.xguf-in *.gguf *.sha256 *.bin *.imatrix *.png *.json *.md imatrix_dataset.txt
+	rm -f *.xguf *.xguf-in *.gguf *.sha256 *.bin *.imatrix *.png *.json $(README) imatrix_dataset.txt
 
 upload: assets
 	$(qupload) -i -p -R $(QUANTREPO) .
@@ -141,12 +145,14 @@ _meta.json: $Q.bin
 %.klb: %.bin $(ppl_input)
 	$(perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
 
-$(ASSETS): %.png: | $S/assets/%.png
+$(ASSETS): %: | $S/assets/%
 	cp $| $@
 
-README.md: _meta.json GNUmakefile
+ifdef README
+$(README): _meta.json GNUmakefile
 	rm -f $@
 	$(mkreadme) -m $< $(mkreadme_opts) -o $@ $(BASEREPO)
+endif
 
 ifndef NO_IMATRIX
 $(IQUANTS:=-in): %:
