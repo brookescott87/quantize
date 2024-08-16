@@ -17,7 +17,7 @@ image_files = (assets_dir / 'BackyardAI_Banner.png',
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
 
-default_description='(Add description here)'
+default_description='See original model.'
 
 def get_model_id(p: Path) -> RepoPath:
     if not p.exists():
