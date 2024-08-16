@@ -36,6 +36,8 @@ def main():
                         help='Description of the model')
     parser.add_argument('--llama-bpe', '-L', action='store_true',
                         help='Use llama-bpe pretokenizer')
+    parser.add_argument('--requant', '-R', action='store_true',
+                        help='Model is a requant')
     parser.add_argument('--test', action='store_true',
                         help='Test mode')
     args = parser.parse_args()
@@ -100,7 +102,10 @@ def main():
         defvar(f, 'BASEMODEL', basemodel.model_name)
         defvar(f, 'CATNAME', basemodel.catalog_name)
         defvar(f, 'FULLNAME', basemodel.formal_name)
-        defvar(f, 'DESCRIPTION', args.description)
+        if args.requant:
+            defvar(f, 'REQUANT', str(1))
+        else:
+            defvar(f, 'DESCRIPTION', args.description)
         f.write(f'\ninclude {defs_mk}\n\n')
 
     print(f'Makefile in {makefile}')
