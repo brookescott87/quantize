@@ -194,7 +194,7 @@ class Model(ProxyObject):
     def catalog_name(self):
         psize,parts = self.parse_param_size()
         name = '-'.join(parts)
-        return f'{self.model_type}.{psize}b.{name}'.lower()
+        return f'{self.architecture}.{psize}b.{name}'.lower()
 
     @cached_property
     def formal_name(self):
@@ -286,7 +286,7 @@ class BaseModel(Model):
     def context(self): return self.config.get('max_position_embeddings')
 
     @cached_property
-    def model_type(self):
+    def architecture(self):
         if (mtype := self.config.get('model_type')) == 'llama':
             return 'llama3' if self.vocab_size > 100*KB else 'llama2'
         else:
@@ -312,7 +312,7 @@ class BaseModel(Model):
             for k in ('<|begin_of_text|>','<|end_of_text|>','<|eot_id|>'):
                 if k in ct: return 'Llama3'
 
-        match self.model_type:
+        match self.architecture:
             case 'mistral': return 'MistralInstruct'
             case 'llama2': return 'general'
             case 'llama3': return 'Llama3'
