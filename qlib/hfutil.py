@@ -312,8 +312,13 @@ class BaseModel(Model):
             for k in ('<|begin_of_text|>','<|end_of_text|>','<|eot_id|>'):
                 if k in ct: return 'Llama3'
 
-        return None
-
+        match self.model_type:
+            case 'mistral': return 'MistralInstruct'
+            case 'llama2': return 'general'
+            case 'llama3': return 'Llama3'
+            case 'gemma2': return 'Gemma2'
+            case 'cohere': return 'CommandR'
+            case _: return None
 
 class QuantModel(Model):
     class proxy_property:
