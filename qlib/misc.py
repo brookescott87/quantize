@@ -2,6 +2,7 @@ import sys
 import io
 import re
 import json
+from enum import StrEnum
 from datetime import datetime as dt, timedelta
 from typing import Any, Callable
 from functools import cached_property
@@ -109,6 +110,11 @@ class BooleanOptionalAction(argparse.BooleanOptionalAction):
             setattr(namespace, self.dest, False)
         else:
             super().__call__(parser, namespace, values, option_string)
+
+class KeywordEnum(StrEnum):
+    @classmethod
+    def _missing_(cls, value):
+        return cls._value2member_map_.get(value.lower())
 
 class ConsoleBuffer(io.StringIO):
     def __init__(self):
