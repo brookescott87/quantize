@@ -274,6 +274,21 @@ class BaseModel(Model):
         return self.read_json('tokenizer_config.json')
 
     @cached_property
+    def chat_template(self):
+        try:
+            ct = self.tokenizer_config.get('chat_template')
+            while ct and not isinstance(ct, str):
+                if isinstance(ct, list):
+                    ct = ct[0]
+                elif isinstance(ct, dict) and 'template' in ct:
+                    ct = ct['template']
+                else:
+                    ct = str(ct)
+            return ct or ''
+        except:
+            return '{# error #}'
+
+    @cached_property
     def calculated_params(self):
         if config := self.config:
             blocks = config['num_hidden_layers']
