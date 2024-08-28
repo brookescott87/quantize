@@ -119,6 +119,10 @@ class ModelFile:
     size: int
     hash: str
 
+class RepositoryNotFoundError(Exception):
+    def __init__(self, repo_id):
+        super().__init__(f'Repository {repr(repo_id)} was not found on HuggingFace')
+
 class Model(ProxyObject):
     cache = dict()
     aliases = {
@@ -213,7 +217,7 @@ class Model(ProxyObject):
             if (repo_id := Model.aliases.get(repo_id,repo_id)) in Model.cache:
                 return Model.cache[repo_id]
             if not hfapi.repo_exists(repo_id):
-                raise ValueError(f'Repository {repo_id} does not exist')
+                raise RepositoryNotFoundError(repo_id)
             if (instcls := cls) is Model:
                 instcls = QuantModel if '-GGUF-' in repo_id or repo_id.endswith('-GGUF') else BaseModel
             if not (obj := object.__new__(instcls)):
