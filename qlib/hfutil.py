@@ -129,6 +129,8 @@ class Model(ProxyObject):
         'microsoft/WizardLM-2-8x22B': 'alpindale/WizardLM-2-8x22B'
     }
 
+    prompt_formats = ['general','ChatML','Llama3','Gemma2','CommandR','MistralInstruct']
+
     def path(self, name:str) -> str:
         return self.repo_id + '/' + name
 

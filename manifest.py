@@ -4,7 +4,7 @@ import os
 import qlib
 import argparse
 
-prompt_formats = {s.lower():s for s in ('general','ChatML','Llama3','Gemma2','CommandR','MistralInstruct')}
+prompt_formats = {s.lower():s for s in qlib.Model.prompt_formats}
 
 def main():
     parser = argparse.ArgumentParser()
