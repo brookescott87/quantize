@@ -73,7 +73,7 @@ QUANTS := $(IQUANTS) $(KQUANTS)
 PPLOUT := $(patsubst %.xguf,%.ppl.out,$(QUANTS))
 ASSETS := $(notdir $(wildcard $S/assets/*.png))
 
-convert_py := convert_hf_to_gguf.py $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
+convert_py := convert_hf_to_gguf.py --model-name=$(or $(FULLNAME),$(BASEMODEL)) $(if $(PRETOKENIZER),--vocab-pre=$(PRETOKENIZER))
 xconvert = python $T/bin/$1 --outtype=$3 --outfile=$(patsubst $Q.auto,$Q.{FTYPE},$4) $(CONVERT_OPTS) $2
 convert = $(call xconvert,$(convert_py),$1,$2,$3)
 imatrix_rename := python $S/imatrix_rename.py
