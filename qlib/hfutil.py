@@ -330,7 +330,7 @@ class QuantModel(Model):
             self.cp = cp
 
         def __call__(self, qm):
-            return self.cp.func(qm.base_model)
+            return qm.base_model and self.cp.func(qm.base_model)
 
     @property
     def is_quant(self):
@@ -342,7 +342,12 @@ class QuantModel(Model):
 
     @cached_property
     def base_model(self):
-        return self.card_data and BaseModel(self.card_data.base_model)
+        if (cd := self.card_data) and (bm := cd.base_model):
+            try:
+                return BaseModel(bm)
+            except RepositoryNotFoundError as rnfe:
+                print(rnfe)
+        return None
 
     @classmethod
     def __init_proxy__(cls):
