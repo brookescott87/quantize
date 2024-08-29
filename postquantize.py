@@ -8,8 +8,9 @@ import subprocess
 import argparse
 
 class PurgeFailed(Exception):
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, *slop):
         self.path = path
+        self.slop = slop
 
 def init_paths():
     def chk(p:Path) -> Path:
