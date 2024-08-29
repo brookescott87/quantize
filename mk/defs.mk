@@ -22,7 +22,7 @@ $(error ORGANIZATION is not set)
 endif
 endif
 
-all:;
+all: quants
 
 #imatrix_default_dataset := 20k_random_data.txt
 imatrix_default_dataset := https://github.com/ggerganov/llama.cpp/files/15440637/groups_merged-enhancedV3.txt
@@ -94,9 +94,9 @@ imat: $Q.imatrix
 endif
 klb: $Q.klb
 ppl: $(PPLOUT)
-all quants: $Q.$F.xguf
-all quants: $(QUANTS)
-all assets: $(ASSETS) $(README)
+quants: $Q.$F.xguf
+quants: $(QUANTS)
+assets: $(ASSETS) $(README)
 
 tidy:
 	rm -f *.tmp tmp
