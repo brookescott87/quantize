@@ -193,9 +193,12 @@ class StatusLine:
 class ProgressLine(StatusLine):
     max_staleness = timedelta(milliseconds=200)
 
-    def __init__(self, total_amount:int, message:str):
+    def __init__(self, total_amount:int, message:(str | None) = None):
         super().__init__()
-        self.message = message
+        if message is not None:
+            self.prefix = message + ': '
+        else:
+            self.prefix = '    '
         self.total_amount = total_amount
         self.completed = 0
         self.last_update = self.start_time = dt.now()
@@ -207,14 +210,14 @@ class ProgressLine(StatusLine):
             estr = ProgressLine.format_timedelta(elapsed := self.elapsed)
             remaining = elapsed/progress
             rstr = ProgressLine.format_timedelta(remaining)
-            self.print(f'{self.message}: {self.completed:15,} of {self.total_amount:15,} ({progress*100:.1f}%) [{estr}<{rstr}]')
+            self.print(f'{self.prefix}{self.completed:15,} of {self.total_amount:15,} ({progress*100:.1f}%) [{estr}<{rstr}]')
             self.retn()
             self.last_update = dt.now()
 
     def finish(self, message=None):
         self.retn()
         estr = ProgressLine.format_timedelta(self.elapsed)
-        self.print(f'{message or self.message}: {self.completed:,} in {estr}\n')
+        self.print(f'{message or self.prefix}: {self.completed:,} in {estr}\n')
 
     @property
     def elapsed(self):

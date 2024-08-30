@@ -43,7 +43,8 @@ def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
     with io.open(path, 'rb') as file:
         sample = file.peek(512)[:512]
         if not digest:
-            pl = ProgressLine(size, f'Hashing {os.path.basename(path)}')
+            print(size, f'Hashing {os.path.basename(path)}')
+            pl = ProgressLine(size)
             h = hashlib.sha256(usedforsecurity=False)
             buffer = IOBuffer(MiB)
             while nbytes := buffer.readfrom(file):
