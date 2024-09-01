@@ -178,6 +178,10 @@ class Model(ProxyObject):
         return False
 
     @property
+    def is_source(self):
+        return False
+
+    @property
     def url(self):
         return 'https://huggingface.co/' + self.repo_id
 
@@ -254,7 +258,7 @@ class Model(ProxyObject):
             if not hfapi.repo_exists(repo_id):
                 raise RepositoryNotFoundError(repo_id)
             if (instcls := cls) is Model:
-                instcls = QuantModel if '-GGUF-' in repo_id or repo_id.endswith('-GGUF') else BaseModel
+                instcls = QuantModel if '-GGUF-' in repo_id or repo_id.endswith('-GGUF') else SourceModel
             if not (obj := object.__new__(instcls)):
                 raise RuntimeError(f"Failed to create object of type {instcls}")
             obj._repo_id = repo_id
@@ -295,7 +299,11 @@ class Model(ProxyObject):
             kvembeds = int(embeds / dkvs)
         return embeds*(1 + blocks*(2 + 3*ffs + 2*(embeds + kvembeds)) + 2*vocabs)
 
-class BaseModel(Model):
+class SourceModel(Model):
+    @property
+    def is_source(self):
+        return True
+
     @cached_property
     def config(self):
         return self.read_json('config.json')
@@ -394,14 +402,14 @@ class QuantModel(Model):
     def base_model(self):
         if (cd := self.card_data) and (bm := cd.base_model):
             try:
-                return BaseModel(bm)
+                return SourceModel(bm)
             except RepositoryNotFoundError as rnfe:
                 print(rnfe)
         return None
 
     @classmethod
     def __init_proxy__(cls):
-        for attrname,bcp in vars(BaseModel).items():
+        for attrname,bcp in vars(SourceModel).items():
             if isinstance(bcp, cached_property):
                 p = cls.proxy_property(bcp)
                 qcp = cached_property(p)
