@@ -114,6 +114,38 @@ class Uploader(object):
 def list_models(private=False):
     return [m.id for m in hfapi.list_models(author=organization) if private or not m.private]
 
+def is_safetensors_model(repo_id:str) -> bool:
+    try:
+        for jf in ('config', 'generation_config', 'special_tokens_map', 'tokenizer', 'tokenizer_config'):
+            if not hfapi.file_exists(repo_id, jf + '.json'):
+                return False
+        msize = 0
+        for rs in hfapi.model_info(repo_id, files_metadata=True).siblings:
+            if rs.rfilename.endswith('.safetensors'):
+                if (msize := msize + rs.size) >= 12_000_000_000:
+                    return True
+    except KeyboardInterrupt as kbe:
+        raise kbe
+    except:
+        pass
+    return False
+
+def recent_safetensors_models(*,days=0, hours=0, mins=0, secs=0, limit=None):
+    secs = ((((days * 24) + hours) * 60) + mins) * 60 + secs
+    cutoff = secs and (datetime.datetime.now(tz=datetime.timezone.utc) - 
+                datetime.timedelta(seconds=int(secs), microseconds=int((secs % 1) * 1_000_000))) or None
+    count = 0
+    if not (cutoff or limit):
+        raise ValueError('unbounded search not allowed')
+    for mi in hfapi.list_models(sort='createdAt'):
+        if cutoff and mi.created_at < cutoff:
+            break
+        if is_safetensors_model(mi.id):
+            count += 1
+            yield mi.id
+            if limit and not count < limit:
+                break
+
 @dataclass
 class ModelFile:
     name: str
