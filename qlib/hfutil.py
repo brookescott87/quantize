@@ -182,6 +182,10 @@ class Model(ProxyObject):
         return False
 
     @property
+    def base_model(self):
+        return self
+
+    @property
     def url(self):
         return 'https://huggingface.co/' + self.repo_id
 
