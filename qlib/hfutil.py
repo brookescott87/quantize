@@ -259,17 +259,33 @@ class Model(ProxyObject):
                 repo_id = organization + '/' + repo_id
             if (repo_id := Model.aliases.get(repo_id,repo_id)) in Model.cache:
                 return Model.cache[repo_id]
-            if not hfapi.repo_exists(repo_id):
-                raise RepositoryNotFoundError(repo_id)
-            if (instcls := cls) is Model:
-                instcls = QuantModel if '-GGUF-' in repo_id or repo_id.endswith('-GGUF') else SourceModel
-            if not (obj := object.__new__(instcls)):
-                raise RuntimeError(f"Failed to create object of type {instcls}")
-            obj._repo_id = repo_id
-            Model.cache[repo_id] = obj
-            return obj
+            if instcls := cls.repo_model_type(repo_id):
+                if obj := object.__new__(instcls):
+                    obj._repo_id = repo_id
+                    Model.cache[repo_id] = obj
+                    return obj
+                else:
+                    raise TypeError(f"Failed to create object of type {instcls}")
+            else:
+                raise TypeError(f"Failed to determine type of {repo_id}")
         else:
             return None
+
+    @staticmethod
+    def repo_model_type(repo_id:str) -> type | None:
+        return Model.repo_model_type_default(repo_id)
+
+    @staticmethod
+    def repo_model_type_default(repo_id:str) -> type | None:
+        if not hfapi.repo_exists(repo_id):
+            raise RepositoryNotFoundError(repo_id)
+        if repo_id.endswith('-GGUF') or '-GGUF-' in repo_id:
+            return QuantModel
+        if hfapi.file_exists(repo_id, 'config.json') and hfapi.file_exists(repo_id, 'model.safetensors.index.json'):
+            return SourceModel
+        if any(f.casefold().endswith('.gguf') for f in hfapi.list_repo_files(repo_id)):
+            return QuantModel
+        return None
 
     def parse_param_size(self):
         if nexperts := self.num_experts:
