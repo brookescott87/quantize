@@ -262,6 +262,23 @@ class Manifest:
     def summary(self, readable = True):
         self.show(readable, True)
 
+backyard_model_class_map = {}
+
+hfutil.Model.is_backyard = misc.const_property(False)
+
+class BackyardModel(hfutil.Model):
+    is_backyard = misc.const_property(True)
+
+def backyard_repo_model_type(repo_id):
+    if issubclass(cls := hfutil.Model.repo_model_type_default(repo_id), hfutil.Model):
+        if repo_id.startswith('backyardai/'):
+            if not (bycls := backyard_model_class_map.get(cls)):
+                backyard_model_class_map[cls] = bycls = type('Backyard' + cls.__name__, (cls, BackyardModel), {})
+            cls = bycls
+    return cls
+
+hfutil.Model.repo_model_type = backyard_repo_model_type
+
 class Request:
     def __init__(self, data: dict):
         if 'json' in data:
