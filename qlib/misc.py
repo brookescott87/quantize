@@ -20,6 +20,9 @@ def badattr(self, attr:str):
 def is_dataclass_instance(o):
     return dataclasses.is_dataclass(o) and not isinstance(o, type)
 
+def const_property(c:Any = None) -> property:
+    return property(lambda _: c)
+
 class settable_cached_property(cached_property):
     fset: Callable[[Any, Any], None] | None
 
