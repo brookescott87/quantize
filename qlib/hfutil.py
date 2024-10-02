@@ -335,6 +335,10 @@ class SourceModel(Model):
     @cached_property
     def tokenizer_config(self):
         return self.read_json('tokenizer_config.json')
+    
+    @cached_property
+    def llm_config(self):
+        return (c := self.config) and c.get('llm_config', c)
 
     @cached_property
     def chat_template(self):
@@ -353,7 +357,7 @@ class SourceModel(Model):
 
     @cached_property
     def calculated_params(self):
-        if config := self.config:
+        if config := self.llm_config:
             blocks = config['num_hidden_layers']
             embeds = config['hidden_size']
             ffs = config['intermediate_size']
@@ -365,20 +369,20 @@ class SourceModel(Model):
             return None
     
     @cached_property
-    def context(self): return self.config.get('max_position_embeddings')
+    def context(self): return self.llm_config.get('max_position_embeddings')
 
     @cached_property
     def architecture(self):
-        if (mtype := self.config.get('model_type')) == 'llama':
+        if (mtype := self.llm_config.get('model_type')) == 'llama':
             return 'llama3' if self.vocab_size > 100*KB else 'llama2'
         else:
             return mtype
         
     @cached_property
-    def vocab_size(self): return self.config.get('vocab_size')
+    def vocab_size(self): return self.llm_config.get('vocab_size')
 
     @cached_property
-    def num_experts(self): return self.config.get('num_local_experts')
+    def num_experts(self): return self.llm_config.get('num_local_experts')
 
     def guess_prompt_format(self):
         bos,eos = [self.tokenizer_config.get(k) for k in ('bos_token','eos_token')]

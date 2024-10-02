@@ -101,6 +101,7 @@ def main():
                 #raise ValueError('Model name mismatch')
             else:
                 sys.stderr.write("Warning: model name not set in base model's metadata\n")
+    config = config.get('llm_config', config)
 
     if args.meta:
         with args.meta.open('rt', encoding='utf-8') as f:
