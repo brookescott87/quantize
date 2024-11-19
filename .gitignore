@@ -1,6 +1,7 @@
 /models/
 /output/
 /build/
+/.vscode/
 /__pycache__/
 /site.mk
 *.gguf
