@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import os
 from pathlib import Path
 from typing import Iterable
@@ -33,9 +34,11 @@ def hash_file(p: Path):
         fsize = p.stat().st_size
         with open(p, 'rb') as srcfile:
             if fsize > qlib.MAX_BLOB_SIZE:
-                h = hashlib.file_digest(srcfile, 'sha256')
+                sys.stdout.write(f'Hashing {p.name}... ')
+                hx = hashlib.file_digest(srcfile, 'sha256').hexdigest()
+                sys.stdout.write(f'{hx[:16]}\n')
                 with outp.open('wt') as outfile:
-                    outfile.write(h.hexdigest())
+                    outfile.write(hx)
 
 def gguf_split(xguf, outp):
     result = subprocess.run([gguf_split_exe, '--split-max-size', '50G', str(xguf), str(outp)])
