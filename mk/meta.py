@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from gguf.gguf_reader import GGUFReader
+from gguf.gguf_reader import GGUFReader,ReaderTensor
 import json
 import argparse
 
@@ -20,13 +20,18 @@ def convert_num(s:str) -> float|None:
         return value * mult
     else:
         return 0
+    
+def block_num(t:ReaderTensor, nonblock=None) -> int|None:
+    return int(t.name.split('.')[1]) if t.name.startswith('blk.') else nonblock
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--description', '-d', type=str, default=None,
                         help='Set description')
     parser.add_argument('--gpu-memory', type=str, default=None,
-                        help='amount of memory in the gpu')
+                        help='amount of memory in the gpu'),
+    parser.add_argument('--blocksizes', '-B', action='store_true',
+                        help='List block sizes in metadata'),
     parser.add_argument('json', type=Path,
                         help='File to write meta to')
     parser.add_argument('gguf', type=Path,
@@ -47,15 +52,20 @@ def main():
     input = GGUFReader(args.gguf)
     paramsize = 0
     parambytes = 0
+    numblocks = max(filter(bool,map(block_num, input.tensors))) + 1
+    blocksize = [0] * numblocks
     lastgpublock = None
     for t in input.tensors:
         paramsize += t.n_elements
         parambytes += t.n_bytes
-        if t.name.startswith('blk.') and gpu_memory > parambytes:
-            lastgpublock = t.name
+        if (blk := block_num(t)) is not None:
+            blocksize[blk] += t.n_bytes
+            if gpu_memory > parambytes:
+                lastgpublock = blk
     meta['paramsize'] = paramsize
+    meta['blocksize'] = blocksize
     if lastgpublock:
-        meta['gpulayers'] = int(lastgpublock.split('.')[1])
+        meta['gpulayers'] = blk
 
     with args.json.open('wt', encoding='utf-8') as f:
         json.dump(meta, f, ensure_ascii=False, indent=4)
