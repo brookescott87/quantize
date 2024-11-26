@@ -266,19 +266,23 @@ backyard_model_class_map = {}
 
 hfutil.Model.is_backyard = misc.const_property(False)
 
+def backyard_base(cls):
+    for base in cls.__bases__:
+        try:
+            if base.is_backyard is hfutil.Model.is_backyard:
+                return base
+        except AttributeError:
+            pass
+    return None
+
 class BackyardModel(hfutil.Model):
     is_backyard = misc.const_property(True)
 
     @classmethod
     def __init_proxy_all__(cls):
-        for base in cls.__bases__:
-            if getattr(base, 'is_backyard', None) is hfutil.Model.is_backyard:
-                added = 'Added'
-                base.__by_class__ = cls
-                backyard_model_class_map[base] = cls
-            else:
-                added = 'Skipped'
-            print(f'{added} {cls.__name__} as a by class of {base.__name__}')
+        if base := backyard_base(cls):
+            base.__by_class__ = cls
+            backyard_model_class_map[base] = cls
 
 class BackyardQuantModel(BackyardModel, hfutil.QuantModel):
     manifestor = Manifest
