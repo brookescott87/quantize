@@ -269,12 +269,30 @@ hfutil.Model.is_backyard = misc.const_property(False)
 class BackyardModel(hfutil.Model):
     is_backyard = misc.const_property(True)
 
+    @classmethod
+    def __init_subclass__(cls):
+        for base in cls.__bases__:
+            if getattr(base, 'is_backyard', None) is hfutil.Model.is_backyard:
+                added = 'Added'
+                base.__by_class__ = cls
+                backyard_model_class_map[base] = cls
+            else:
+                added = 'Skipped'
+            print(f'{added} {cls.__name__} as a by class of {base.__name__}')
+
+    @classmethod
+    def __init_proxy__(cls):
+        cls.__init_subclass__()
+
+class BackyardQuantModel(BackyardModel, hfutil.QuantModel):
+    manifestor = Manifest
+
 def backyard_repo_model_type(repo_id):
     if cls := hfutil.Model.repo_model_type_default(repo_id):
         if issubclass(cls, hfutil.Model):
             if repo_id.startswith('backyardai/'):
                 if not (bycls := backyard_model_class_map.get(cls)):
-                    backyard_model_class_map[cls] = bycls = type('Backyard' + cls.__name__, (cls, BackyardModel), {})
+                    backyard_model_class_map[cls] = bycls = type('Backyard' + cls.__name__, (cls, cls.__by_class__), {})
                 cls = bycls
     return cls
 
