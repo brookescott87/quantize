@@ -64,6 +64,11 @@ class ProxyObject:
     def __init_subclass__(cls):
         if '__init_proxy__' in vars(cls):
             cls.__init_proxy__()
+        cls.__init_proxy_all__()
+
+    @classmethod
+    def __init_proxy_all__(cls):
+        pass
 
     def refresh(self):
         self.forget(*filter(lambda k: not k.startswith('_'), vars(self)))

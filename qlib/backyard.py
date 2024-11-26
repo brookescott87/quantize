@@ -270,7 +270,7 @@ class BackyardModel(hfutil.Model):
     is_backyard = misc.const_property(True)
 
     @classmethod
-    def __init_subclass__(cls):
+    def __init_proxy_all__(cls):
         for base in cls.__bases__:
             if getattr(base, 'is_backyard', None) is hfutil.Model.is_backyard:
                 added = 'Added'
@@ -279,10 +279,6 @@ class BackyardModel(hfutil.Model):
             else:
                 added = 'Skipped'
             print(f'{added} {cls.__name__} as a by class of {base.__name__}')
-
-    @classmethod
-    def __init_proxy__(cls):
-        cls.__init_subclass__()
 
 class BackyardQuantModel(BackyardModel, hfutil.QuantModel):
     manifestor = Manifest
