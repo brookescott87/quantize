@@ -207,10 +207,10 @@ class Model(ProxyObject):
     def files(self):
         return [ModelFile.from_sibling(self, rs) for rs in self.model_info_full.siblings]
 
-    def iterfiles(self, matcher=None):
-        for mf in self.files:
-            if not matcher or matcher(mf.name):
-                yield mf
+    def iterfiles(self, full=False, matcher=None, cls=ModelFile):
+        for rs in hfapi.model_info(self.repo_id, files_metadata=full).siblings:
+            if not matcher or matcher(rs.rfilename):
+                yield cls(self, rs)
 
     @cached_property
     def card_data(self): return self.model_info.card_data
