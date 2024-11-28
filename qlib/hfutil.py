@@ -148,6 +148,7 @@ def recent_safetensors_models(*,days=0, hours=0, mins=0, secs=0, limit=None):
 
 @dataclass
 class ModelFile:
+    model: 'Model'
     name: str
     size: int
     hash: str
@@ -201,7 +202,7 @@ class Model(ProxyObject):
     @cached_property
     def files(self):
         siblings = self.model_info_full.siblings
-        return [ModelFile(rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id) for rs in siblings]
+        return [ModelFile(self, rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id) for rs in siblings]
 
     def iterfiles(self, matcher=None):
         for mf in self.files:
