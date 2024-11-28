@@ -153,6 +153,10 @@ class ModelFile:
     size: int
     hash: str
 
+    @classmethod
+    def from_sibling(cls, model: 'Model', rs=huggingface_hub.hf_api.RepoSibling):
+        return cls(model, rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id)
+
 class RepositoryNotFoundError(Exception):
     def __init__(self, repo_id):
         super().__init__(f'Repository {repr(repo_id)} was not found on HuggingFace')
@@ -201,8 +205,7 @@ class Model(ProxyObject):
     
     @cached_property
     def files(self):
-        siblings = self.model_info_full.siblings
-        return [ModelFile(self, rs.rfilename, rs.size, rs.lfs.sha256 if rs.lfs else rs.blob_id) for rs in siblings]
+        return [ModelFile.from_sibling(self, rs) for rs in self.model_info_full.siblings]
 
     def iterfiles(self, matcher=None):
         for mf in self.files:
