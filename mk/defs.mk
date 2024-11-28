@@ -140,7 +140,7 @@ endif
 endif
 
 _meta.json: $Q.bin
-	python $S/mk/meta.py $(META_OPTS) $@ $<
+	python $S/mkmeta.py $(META_OPTS) $@ $<
 
 %.klb: %.bin $(ppl_input)
 	$(perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
