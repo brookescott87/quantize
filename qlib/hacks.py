@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 import math
 
 def initattr(obj, name, value):
@@ -20,3 +21,25 @@ initattr(Path, 'mtime',
 # For the purpose of comparison, nonexistent file is treated as though it were infinitely old
 initattr(Path, 'is_newer_than', lambda self, other: (self.mtime or -math.inf) > (other.mtime or -math.inf))
 initattr(Path, 'is_older_than', lambda self, other: (self.mtime or -math.inf) < (other.mtime or -math.inf))
+
+import numpy
+import gguf
+
+def ndarray_tostring(nda:numpy.ndarray) -> str:
+    return nda.tobytes().decode('utf-8')
+
+def ndarray_toscalar(nda:numpy.ndarray) -> Any:
+    return nda.item()
+
+def gguf_ReaderField_decode(self:gguf.gguf_reader.ReaderField) -> Any:
+    if self.types[-1] == gguf.GGUFValueType.STRING:
+        fdec = ndarray_tostring
+    else:
+        fdec = ndarray_toscalar
+    gen=(fdec(self.parts[i]) for i in self.data)
+    if self.types[0] == gguf.GGUFValueType.ARRAY:
+        return list(gen)
+    else:
+        return next(gen,None)
+
+gguf.gguf_reader.ReaderField.decode = gguf_ReaderField_decode
