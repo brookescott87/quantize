@@ -1,4 +1,5 @@
 import sys
+import os
 import io
 import re
 import json
@@ -8,6 +9,8 @@ from typing import Any, Callable
 from functools import cached_property
 import dataclasses
 import argparse
+import gguf
+import numpy
 
 _re_special_chars_map = {n:u for n,u in re._special_chars_map.items() if chr(n).isprintable()}
 
@@ -245,3 +248,28 @@ class ProgressLine(StatusLine):
 
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
+class GGUFMetadataReader(gguf.gguf_reader.GGUFReader):
+    class FileMapper:
+        def __init__(self, path: os.PathLike[str] | str, mode:str = 'rb',
+                     opener:Callable[[os.PathLike[str] | str, str], io.BufferedReader] | None = None):
+            assert mode == 'rb'
+            self.file = (opener or open)(path, mode = mode)
+        
+        def __getitem__(self, i):
+            return self._getrange(*self._extent(i))
+        
+        def _getrange(self, offset:int, nbytes:int = 1):
+            self.file.seek(offset)
+            return numpy.ndarray((nbytes,), dtype=numpy.uint8, buffer=self.file.read(nbytes))
+
+        @staticmethod
+        def _extent(i):
+            return (i.start, i.stop - i.start) if isinstance(i, slice) else (i,)
+
+    def __init__(self, path: os.PathLike[str] | str, mode:str = 'rb', cls:type = FileMapper,
+                 opener:Callable[[os.PathLike[str] | str, str], io.BufferedReader] | None = None):
+        super().__init__(path, mode = mode, cls = cls, opener = opener)
+
+    def _build_tensor_info(self, offs: int, count: int) -> tuple[int, list[gguf.gguf_reader.ReaderField]]:
+        count = 0
+        return super()._build_tensor_info(offs, count)
