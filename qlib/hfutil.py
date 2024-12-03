@@ -25,6 +25,11 @@ hfs = huggingface_hub.HfFileSystem()
 
 paramsize_rx = re.compile('((\d+x)?(\d{1,3}(\.\d)?))[Bb]$')
 
+## Uncomment these lines if you have issues with chmod failing 
+# import huggingface_hub.file_download
+# import shutil
+# huggingface_hub.file_download._chmod_and_move = shutil.move
+
 @classmethod
 def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
     hexdigest = digest = None
