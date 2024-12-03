@@ -290,8 +290,9 @@ class Model(ProxyObject):
             raise RepositoryNotFoundError(repo_id)
         if repo_id.endswith('-GGUF') or '-GGUF-' in repo_id:
             return QuantModel
-        if hfapi.file_exists(repo_id, 'config.json') and (hfapi.file_exists(repo_id, 'model.safetensors.index.json') or hfapi.file_exists(repo_id, 'pytorch_model.bin.index.json')):
-            return SourceModel
+        if hfapi.file_exists(repo_id, 'config.json'):
+            if any(hfapi.file_exists(repo_id, fn) for fn in ('model.safetensors', 'model.safetensors.index.json', 'pytorch_model.bin.index.json')):
+                return SourceModel
         if any(f.casefold().endswith('.gguf') for f in hfapi.list_repo_files(repo_id)):
             return QuantModel
         return None
