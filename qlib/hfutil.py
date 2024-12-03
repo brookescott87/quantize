@@ -268,6 +268,8 @@ class Model(ProxyObject):
                 repo_id = organization + '/' + repo_id
             if (repo_id := Model.aliases.get(repo_id,repo_id)) in Model.cache:
                 return Model.cache[repo_id]
+            if not hfapi.repo_exists(repo_id):
+                raise RepositoryNotFoundError(repo_id)
             if instcls := cls.repo_model_type(repo_id):
                 if obj := object.__new__(instcls):
                     obj._repo_id = repo_id
@@ -286,8 +288,6 @@ class Model(ProxyObject):
 
     @staticmethod
     def repo_model_type_default(repo_id:str) -> type | None:
-        if not hfapi.repo_exists(repo_id):
-            raise RepositoryNotFoundError(repo_id)
         if repo_id.endswith('-GGUF') or '-GGUF-' in repo_id:
             return QuantModel
         if hfapi.file_exists(repo_id, 'config.json'):
