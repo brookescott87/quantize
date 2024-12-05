@@ -165,5 +165,8 @@ $(KQUANTS:=-in): %:
 %.xguf: %.xguf-in
 	$(postquantize) $< $@
 
+%.gguf.sha256: %.gguf
+	python $S/sha256_files.py $<
+
 %.ppl.out: %.xguf $Q.klb
 	$(perplexity) -m $< $(ngl) --kl-divergence --kl-divergence-base $Q.klb | tee $@.tmp && mv -f $@.tmp $@
