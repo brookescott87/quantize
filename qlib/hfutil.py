@@ -2,7 +2,7 @@ import sys
 import os
 import io
 import re
-from pathlib import Path
+from pathlib import Path as LocalPath
 from functools import cached_property
 from dataclasses import dataclass
 import datetime
@@ -80,7 +80,7 @@ def UploadInfo_from_path(cls, path: str) -> huggingface_hub.lfs.UploadInfo:
 setattr(huggingface_hub.lfs.UploadInfo, 'from_path', UploadInfo_from_path)
 
 class Uploader(object):
-    def __init__(self, repo_id: str, folder_path: Path, max_retries:int = 0):
+    def __init__(self, repo_id: str, folder_path: LocalPath, max_retries:int = 0):
         self.repo_id = repo_id
         self.folder_path = folder_path
         self.max_retries = max_retries
@@ -255,7 +255,7 @@ class Model(ProxyObject):
         hfs.write_text(self.path('README.md'), value, encoding='utf-8')
 
     def download(self):
-        return Path(hfapi.snapshot_download(repo_id=self.repo_id))
+        return LocalPath(hfapi.snapshot_download(repo_id=self.repo_id))
 
     @cached_property
     def catalog_name(self):

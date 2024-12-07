@@ -1,5 +1,5 @@
 import re
-from pathlib import Path
+from pathlib import Path as LocalPath
 import json
 from dataclasses import dataclass
 from functools import cached_property
@@ -19,7 +19,7 @@ ctx_rx = re.compile('(\d+) tokens$')
 class Backyard:
     @cached_property
     def backyard_dir(self):
-        if (d := Path('~/.cache/backyard').expanduser()).exists():
+        if (d := LocalPath('~/.cache/backyard').expanduser()).exists():
             if not d.is_dir():
                 raise RuntimeError(f'{d} is not a directory')
         else:
