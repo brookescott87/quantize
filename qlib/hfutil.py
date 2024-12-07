@@ -10,7 +10,7 @@ import json
 import clear_screen
 import huggingface_hub
 import hashlib
-from typing import List
+from typing import List, Optional, Tuple
 from .defs import *
 from .misc import *
 from .iobuffer import *
@@ -19,6 +19,17 @@ MAX_BLOB_SIZE = 1*MB
 MAX_UPLOAD_SIZE = 50*GB
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
+
+try:
+    eval('repo_type_and_id_from_hf_id_default')
+except NameError:
+    repo_type_and_id_from_hf_id_default = huggingface_hub.repo_type_and_id_from_hf_id
+
+def repo_type_and_id_from_hf_id(hf_id: str, hub_url: Optional[str] = None) -> Tuple[Optional[str], Optional[str], str]:
+    repo_type, namespace, repo_id = repo_type_and_id_from_hf_id_default(hf_id, hub_url)
+    return repo_type, namespace or organization, repo_id
+
+huggingface_hub.repo_type_and_id_from_hf_id = repo_type_and_id_from_hf_id
 
 hfapi = huggingface_hub.HfApi()
 hfs = huggingface_hub.HfFileSystem()
