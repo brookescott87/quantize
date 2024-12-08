@@ -2,6 +2,31 @@ from typing import Any
 import pathlib
 import math
 
+def PurePath___set_parts(self, drv, root, parts):
+    self._drv = drv
+    self._root = root
+    self._parts = [p for p in parts if not p == '.']
+    if not root:
+        self._parts.insert(0, '.')
+    return self
+
+pathlib.PurePath._set_parts = PurePath___set_parts
+
+@classmethod
+def PurePath___from_parts(cls, args):
+    # We need to call _parse_args on the instance, so as to get the
+    # right flavour.
+    self = object.__new__(cls)
+    return self._set_parts(*self._parse_args(args))
+
+pathlib.PurePath._from_parts = PurePath___from_parts
+
+@classmethod
+def PurePath___from_parsed_parts(cls, drv, root, parts):
+    return object.__new__(cls)._set_parts(drv, root, parts)
+
+pathlib.PurePath._from_parsed_parts = PurePath___from_parsed_parts
+
 def initattr(obj, name, value):
     if not hasattr(obj, name):
         setattr(obj, name, value)
