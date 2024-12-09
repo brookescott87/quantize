@@ -2,12 +2,15 @@ from typing import Any
 import pathlib
 import math
 
+def pp_fixup(root, parts):
+    if not root:
+        yield '.'
+    yield from (p for p in parts if not p == '.')
+
 def PurePath___set_parts(self, drv, root, parts):
     self._drv = drv
     self._root = root
-    self._parts = [p for p in parts if not p == '.']
-    if not root:
-        self._parts.insert(0, '.')
+    self._parts = list(pp_fixup(root, parts))
     return self
 
 pathlib.PurePath._set_parts = PurePath___set_parts
