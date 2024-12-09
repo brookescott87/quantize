@@ -27,7 +27,7 @@ def main():
     parser.add_argument('basemodel', type=str,
                         help='Base model to be quantized')
     parser.add_argument('--build-root', '-b', type=Path, default=quantize_build_root,
-                        help='Build directory')
+                        help=f'Build directory (default="{quantize_build_root}")')
     parser.add_argument('--affix', '-a', type=str, default='',
                         help='Local affix to model name')
     parser.add_argument('--force', '-f', action='store_true',
