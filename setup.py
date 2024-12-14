@@ -36,6 +36,8 @@ def main():
                         help='Description of the model')
     parser.add_argument('--llama-bpe', '-L', action='store_true',
                         help='Use llama-bpe pretokenizer')
+    parser.add_argument('--ftype', '-F', type=str.upper, choices=('F32', 'F16', 'BF16'),
+                        help='Floating point type of base model'),
     parser.add_argument('--requant', '-R', action='store_true',
                         help='Model is a requant')
     parser.add_argument('--test', action='store_true',
@@ -83,6 +85,8 @@ def main():
                     raise RuntimeError(f'{basemodel_link} exists and --force not given')
             basemodel_link.symlink_to(cache_path, target_is_directory=True)
 
+    ftype = args.ftype or qlib.guess_model_datatype(basemodel_link)
+
     with basemodel_id.open('wt') as f:
         f.write(baserepo)
         f.write('\n')
@@ -106,6 +110,7 @@ def main():
             defvar(f, 'REQUANT', str(1))
         else:
             defvar(f, 'DESCRIPTION', args.description)
+        defvar(f, 'FTYPE', ftype)
         f.write(f'\ninclude {defs_mk}\n\n')
 
     print(f'Makefile in {makefile}')
