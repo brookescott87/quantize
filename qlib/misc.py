@@ -9,8 +9,11 @@ from typing import Any, Callable
 from functools import cached_property
 import dataclasses
 import argparse
+import torch
+import safetensors
 import gguf
 import numpy
+import pathlib
 
 _re_special_chars_map = {n:u for n,u in re._special_chars_map.items() if chr(n).isprintable()}
 
@@ -273,3 +276,20 @@ class GGUFMetadataReader(gguf.gguf_reader.GGUFReader):
     def _build_tensor_info(self, offs: int, count: int) -> tuple[int, list[gguf.gguf_reader.ReaderField]]:
         count = 0
         return super()._build_tensor_info(offs, count)
+
+def torch_type_str(dtype: torch.dtype) -> str:
+    return (str(dtype).split('.')[-1]).replace('float','f').replace('uint', 'u').replace('int', 'i').upper()
+
+def guess_model_datatype(model_dir: str | pathlib.Path) -> str:
+    model_dir = pathlib.Path(model_dir)
+    for f in model_dir.glob('model*.safetensors'):
+        # safetensors model
+        with safetensors.safe_open(f, framework="pt", device="cpu") as part:
+            for name in part.keys():
+                data = part.get_slice(name)
+                return data.get_dtype()
+    for f in model_dir.glob('pytorch_model*.bin'):
+        part = torch.load(f, map_location="cpu", mmap=True, weights_only=True)
+        for data in part.values():
+            return torch_type_str(data.dtype)
+    raise ValueError(f'{model_dir} seems to be neither safetensors nor pytorch')
