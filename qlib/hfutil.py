@@ -19,6 +19,7 @@ MAX_BLOB_SIZE = 1*MB
 MAX_UPLOAD_SIZE = 50*GB
 
 organization = os.getenv('HF_DEFAULT_ORGANIZATION')
+hf_url_prefix = 'https://huggingface.co/'
 
 try:
     eval('repo_type_and_id_from_hf_id_default')
@@ -208,7 +209,7 @@ class Model(ProxyObject):
 
     @property
     def url(self):
-        return 'https://huggingface.co/' + self.repo_id
+        return hf_url_prefix + self.repo_id
 
     @cached_property
     def model_info(self):
