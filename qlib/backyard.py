@@ -365,7 +365,7 @@ class Requestor:
         return self.request('getModels', GetRequest({'onlyNonGGUF': only_non_gguf}))
 
     def get_last_commit(self, model_id):
-        return self.request('getLastCommit', PostRequest({'url': f'https://huggingface.co/{model_id}'}))
+        return self.request('getLastCommit', PostRequest({'url': hfutil.hf_url_prefix + model_id}))
 
     def submit(self, manifest: Manifest):
         return self.request('addPendingApproval', PostRequest(manifest.generate()))

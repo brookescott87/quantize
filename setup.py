@@ -47,7 +47,7 @@ def main():
     if args.affix and not args.affix.startswith('-'):
         args.affix = '-' + args.affix
 
-    if not '/' in (baserepo := args.basemodel.removeprefix('https://huggingface.co/')):
+    if not '/' in (baserepo := args.basemodel.removeprefix(qlib.hf_url_prefix)):
         raise ValueError('basemodel must be of the form owner/model')
     
     basemodel = qlib.SourceModel(baserepo)
