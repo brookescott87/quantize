@@ -28,6 +28,8 @@ def main():
                         help='Base model to be quantized')
     parser.add_argument('--build-root', '-b', type=Path, default=quantize_build_root,
                         help=f'Build directory (default="{quantize_build_root}")')
+    parser.add_argument('--name', '-n', type=str,
+                        help='Model name override')
     parser.add_argument('--affix', '-a', type=str, default='',
                         help='Local affix to model name')
     parser.add_argument('--force', '-f', action='store_true',
@@ -52,7 +54,7 @@ def main():
     
     basemodel = qlib.SourceModel(baserepo)
 
-    quantmodel = basemodel.model_name + args.affix
+    quantmodel = (args.name or basemodel.model_name) + args.affix
     quantmodel_dir = args.build_root / (quantmodel + '-GGUF')
     makefile = quantmodel_dir / 'GNUmakefile'
 
