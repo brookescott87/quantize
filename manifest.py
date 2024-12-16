@@ -54,6 +54,8 @@ def main():
             return
         if args.repo_id == '.':
             args.repo_id = os.path.basename(os.getcwd())
+        elif args.repo_id.startswith(qlib.hf_url_prefix):
+            args.repo_id = args.repo_id.removeprefix(qlib.hf_url_prefix)
 
         if args.get_head:
             print(r.get_last_commit(args.repo_id))
