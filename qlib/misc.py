@@ -251,7 +251,12 @@ class ProgressLine(StatusLine):
 
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-class GGUFMetadataReader(gguf.gguf_reader.GGUFReader):
+class GGUFReader(gguf.gguf_reader.GGUFReader):
+    def _build_fields(self, offs: int, count: int) -> int:
+        self.tensor_info_offset = offs = super()._build_fields(offs, count)
+        return offs
+
+class GGUFMetadataReader(GGUFReader):
     class FileMapper:
         def __init__(self, path: os.PathLike[str] | str, mode:str = 'rb',
                      opener:Callable[[os.PathLike[str] | str, str], io.BufferedReader] | None = None):
