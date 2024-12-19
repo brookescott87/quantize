@@ -37,8 +37,12 @@ BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
+QUANTIZE_CACHE_DIR := $(abspath $(QUANTIZE_CACHE_DIR))
+qcp := $(if $(QUANTIZE_CACHE_DIR),cp,ln)
+
 B := $(source)/$(BASEMODEL)
 Q := $(QUANTMODEL)
+R := $(addsuffix /,$(QUANTIZE_CACHE_DIR))$Q
 F := $(FTYPE)
 
 IMATRIX_DATASET := $(or $(IMATRIX_DATASET),$(imatrix_default_dataset))
@@ -88,7 +92,7 @@ postquantize := python $S/postquantize.py
 quantize = $T/bin/llama-quantize $1 $2 $(call qtype,$2)
 perplexity := $T/bin/llama-perplexity
 
-bin imat: $Q.bin
+bin imat: $R.bin
 ifndef NO_IMATRIX
 imat: $Q.imatrix
 endif
@@ -122,10 +126,10 @@ endif
 $Q.$F.xguf-in: | $B
 	test -f $@ || $(call convert,$B,$F,$@)
 
-$Q.bin: $Q.$F.xguf-in
-	rm -f $@ && ln $< $@
+$R.bin: $Q.$F.xguf-in
+	rm -f $@ && $(qcp) $< $@
 
-$(QUANTS:=-in):| $Q.bin
+$(QUANTS:=-in):| $R.bin
 
 ifndef NO_IMATRIX
 $(QUANTS:=-in):| $Q.imatrix
@@ -139,7 +143,7 @@ endif
 	$(call imatrix,$*.bin,$@.tmp) && $(imatrix_rename) --dataset $(imatrix_src) $@.tmp $@
 endif
 
-_meta.json: $Q.bin
+_meta.json: $R.bin
 	python $S/mkmeta.py $(META_OPTS) $@ $<
 
 %.klb: %.bin $(ppl_input)
@@ -156,11 +160,11 @@ endif
 
 ifndef NO_IMATRIX
 $(IQUANTS:=-in): %:
-	$(call quantize,--imatrix $Q.imatrix $Q.bin,$@)
+	$(call quantize,--imatrix $Q.imatrix $R.bin,$@)
 endif
 
 $(KQUANTS:=-in): %:
-	$(call quantize,$Q.bin,$@)
+	$(call quantize,$R.bin,$@)
 
 %.xguf: %.xguf-in
 	$(postquantize) $< $@
