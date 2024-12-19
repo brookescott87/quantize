@@ -37,7 +37,7 @@ BASEMODEL := $(or $(BASEMODEL),$(notdir $(BASEREPO)))
 QUANTMODEL := $(or $(QUANTMODEL),$(BASEMODEL))
 QUANTREPO := $(or $(QUANTREPO),$(QUANTMODEL)-GGUF)
 
-QUANTIZE_CACHE_DIR := $(abspath $(QUANTIZE_CACHE_DIR))
+QUANTIZE_CACHE_DIR := $(filter-out $(abspath .),$(abspath $(QUANTIZE_CACHE_DIR)))
 qcp := $(if $(QUANTIZE_CACHE_DIR),cp,ln)
 
 B := $(source)/$(BASEMODEL)
