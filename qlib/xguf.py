@@ -4,8 +4,7 @@ from typing import Callable
 import gguf
 import numpy
 
-__all__ = [ 'GGUFReader', 'GGUFMetadataReader' ]
-
+__exclude__ = set(locals())
 class GGUFReader(gguf.gguf_reader.GGUFReader):
     def _build_fields(self, offs: int, count: int) -> int:
         self.tensor_info_offset = offs = super()._build_fields(offs, count)
@@ -36,3 +35,6 @@ class GGUFMetadataReader(GGUFReader):
     def _build_tensor_info(self, offs: int, count: int) -> tuple[int, list[gguf.gguf_reader.ReaderField]]:
         count = 0
         return super()._build_tensor_info(offs, count)
+
+__all__ = [ sym for sym in locals() if not (sym in __exclude__ or sym.startswith('_'))]
+del __exclude__

@@ -12,6 +12,8 @@ import torch
 import safetensors
 import pathlib
 
+__exclude__ = set(locals())
+
 _re_special_chars_map = {n:u for n,u in re._special_chars_map.items() if chr(n).isprintable()}
 
 def re_escape(s:str) -> str:
@@ -264,3 +266,6 @@ def guess_model_datatype(model_dir: str | pathlib.Path) -> str:
         for data in part.values():
             return torch_type_str(data.dtype)
     raise ValueError(f'{model_dir} seems to be neither safetensors nor pytorch')
+
+__all__ = [ sym for sym in locals() if not (sym in __exclude__ or sym.startswith('_'))]
+del __exclude__
