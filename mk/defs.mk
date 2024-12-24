@@ -139,14 +139,14 @@ $(imatrix_input):
 	wget -O $@ "${imatrix_url}"
 endif
 
-%.imatrix: | %.bin $(imatrix_input)
-	$(call imatrix,$*.bin,$@.tmp) && $(imatrix_rename) --dataset $(imatrix_src) $@.tmp $@
+$Q.imatrix: | $R.bin $(imatrix_input)
+	$(call imatrix,$R.bin,$@.tmp) && $(imatrix_rename) --dataset $(imatrix_src) $@.tmp $@
 endif
 
 _meta.json: $R.bin
 	python $S/mkmeta.py $(META_OPTS) $@ $<
 
-%.klb: %.bin $(ppl_input)
+$Q.klb: $R.bin $(ppl_input)
 	$(perplexity) -sm none -m $< -f $(ppl_input) --kl-divergence-base $@.tmp && rm -f $@.sav && ln $@.tmp $@.sav && mv -f $@.tmp $@
 
 $(ASSETS): %: | $S/assets/%
