@@ -126,7 +126,7 @@ endif
 $Q.$F.xguf-in: | $B
 	test -f $@ || $(call convert,$B,$F,$@)
 
-$R.bin: $Q.$F.xguf-in
+$R.bin: $Q.$F.xguf
 	rm -f $@ && $(qcp) $< $@
 
 $(QUANTS:=-in):| $R.bin
